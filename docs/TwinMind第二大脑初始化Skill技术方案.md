@@ -250,7 +250,7 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
 - KTD11. 运行基线：Python 3.11+；SKILL.md 先用宿主原生固定参数完成 runtime preflight，Python 可用后才调用 CLI；macOS 为正式验证平台，Linux 只做文件系统兼容，Windows 延后。
   - 理由：待检查的 Python 不能承担自身安装探测；先固定 bootstrap 边界、标准库、权限和路径语义，再扩展平台矩阵。
 
-- KTD12. 资产版本：Starter 使用语义版本、source commit 和 manifest digest 三重身份。
+- KTD12. 资产版本：Starter 使用语义版本、source commit 和 manifest digest 三重身份。source commit 必须是最近一次实际修改 `我的第二大脑/` 的 Git 提交，而不是只修改 manifest/assets 的投影提交；canonical source 存在 staged、unstaged 或 untracked 变更时同步器必须拒绝生成新 manifest。
   - 理由：文件名 starter-v1.json 不足以绑定用户批准的真实源内容。
 
 - KTD13. 运行依赖：v0.1 CLI 只依赖 Python 3.11+ 标准库；JSON Schema 只使用项目声明的受支持子集，由本地 contract validator 解释，跨字段不变量由显式验证函数负责。

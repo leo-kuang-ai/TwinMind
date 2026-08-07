@@ -139,6 +139,17 @@ class CanonicalAssetContractTests(unittest.TestCase):
                 self.assertEqual(entry["layer"], expected_layer)
                 self.assertRegex(entry["sha256"], r"^[0-9a-f]{64}$")
 
+    def test_manifest_source_commit_is_latest_canonical_change(self) -> None:
+        manifest = json.loads(STARTER_MANIFEST.read_text(encoding="utf-8"))
+        result = subprocess.run(
+            ["git", "log", "-1", "--format=%H", "--", "我的第二大脑"],
+            cwd=REPO_ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        self.assertEqual(manifest["source"]["commit"], result.stdout.strip())
+
 
 @unittest.skipUnless(SCRIPT.is_file(), "同步脚本尚未实现")
 class SyncScriptBehaviorTests(unittest.TestCase):

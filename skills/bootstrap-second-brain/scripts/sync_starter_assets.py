@@ -292,9 +292,20 @@ def compute_tree_digest(entries: Iterable[dict[str, str]]) -> str:
     return sha256_bytes(canonical_json_bytes(normalized))
 
 
-def current_source_commit() -> str:
+def canonical_source_commit() -> str:
+    dirty = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all", "--", "我的第二大脑"],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if dirty.returncode != 0:
+        raise ProjectionError("无法检查 canonical source 工作树")
+    if dirty.stdout:
+        raise ProjectionError("canonical source 存在未提交变更；请先提交再同步")
     result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "log", "-1", "--format=%H", "--", "我的第二大脑"],
         cwd=REPO_ROOT,
         text=True,
         capture_output=True,
@@ -311,7 +322,7 @@ def expected_starter_manifest(entries: list[dict[str, str]]) -> dict[str, Any]:
         "starter_version": STARTER_VERSION,
         "source": {
             "root": "我的第二大脑",
-            "commit": current_source_commit(),
+            "commit": canonical_source_commit(),
             "tree_digest": compute_tree_digest(entries),
         },
         "projection": {
