@@ -421,9 +421,10 @@ def example_tool_readiness() -> dict[str, Any]:
 def example_release_attestation() -> dict[str, Any]:
     return {
         "schema_version": 1, "package_name": "bootstrap-second-brain-v0.1.zip",
-        "package_sha256": "a" * 64, "package_size": 1234, "source_commit": "b" * 40,
+        "package_sha256": "a" * 64, "package_size": 1234,
+        "starter_source_commit": "b" * 40,
         "starter_digest": "c" * 64, "allowlist_digest": "d" * 64,
-        "builder_version": "0.1.0", "release_boundary": "owner-private-pilot",
+        "builder_version": "0.1.0", "release_boundary": "public-github-mit",
         "zip_namespace": "twinmind-bundle-v1",
         "attestation_namespace": "twinmind-release-attestation-v1",
         "signer_fingerprint": "SHA256:owner-demo",

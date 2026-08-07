@@ -25,7 +25,7 @@ DIST_ROOT = REPO_ROOT / "dist"
 BUNDLE_NAME = "bootstrap-second-brain-v0.1.zip"
 ROOT_NAME = "bootstrap-second-brain"
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
-ALLOWED_ROOT_FILES = {"SKILL.md", "SOURCE.md"}
+ALLOWED_ROOT_FILES = {"LICENSE", "SKILL.md", "SOURCE.md"}
 ALLOWED_PREFIXES = ("agents/", "scripts/", "references/", "assets/", "manifests/", "schemas/")
 FORBIDDEN_PARTS = {"tests", "evals", "results", "__pycache__", ".git", ".twinmind"}
 TEXT_SUFFIXES = {".md", ".py", ".json", ".yaml", ".yml", ".txt"}
@@ -60,10 +60,10 @@ def allowed_files() -> list[Path]:
             continue
         if posix in ALLOWED_ROOT_FILES or posix.startswith(ALLOWED_PREFIXES):
             files.append(path)
-    required = {"schemas/tool-choice.schema.json", "schemas/tool-evidence.schema.json"}
+    required = {"LICENSE", "schemas/tool-choice.schema.json", "schemas/tool-evidence.schema.json"}
     present = {path.relative_to(SKILL_ROOT).as_posix() for path in files}
     if not required <= present:
-        raise PackageError(f"allowlist 缺少 canonical schema：{sorted(required - present)}")
+        raise PackageError(f"allowlist 缺少必需文件：{sorted(required - present)}")
     return sorted(files, key=lambda path: path.relative_to(SKILL_ROOT).as_posix())
 
 
@@ -79,6 +79,15 @@ def _scan_file(path: Path, data: bytes) -> None:
         forbidden = ("/" + "Users/", "BEGIN " + "PRIVATE KEY", "OPENSSH " + "PRIVATE KEY", "sk" + "-")
         if any(token in text for token in forbidden):
             raise PackageError(f"文本含绝对用户路径或密钥模式：{relative}")
+
+
+def validate_release_policy(source: dict[str, str], license_text: str) -> None:
+    if source["distribution_boundary"] != "public-github-mit":
+        raise PackageError("SOURCE.md 发布边界必须为 public-github-mit")
+    if source["license_status"] != "MIT":
+        raise PackageError("SOURCE.md 许可状态必须为 MIT")
+    if not license_text.startswith("MIT License\n\n") or "Permission is hereby granted" not in license_text:
+        raise PackageError("Skill LICENSE 不是完整 MIT License")
 
 
 def _safe_regular_file(path: Path, *, maximum: int, label: str) -> bytes:
@@ -125,8 +134,10 @@ def _validated_source_snapshot() -> list[tuple[Path, bytes]]:
         _scan_file(path, data)
     source = read_source_contract(by_relative["SOURCE.md"].decode("utf-8"))
     starter = json.loads(by_relative["manifests/starter-v1.json"].decode("utf-8"))
-    if source["source_commit"] != starter["source"]["commit"] or source["starter_digest"] != starter["source"]["tree_digest"]:
+    if (source["starter_source_commit"] != starter["source"]["commit"]
+            or source["starter_digest"] != starter["source"]["tree_digest"]):
         raise PackageError("SOURCE.md 与 Starter manifest 不一致")
+    validate_release_policy(source, by_relative["LICENSE"].decode("utf-8"))
     return snapshot
 
 
@@ -148,12 +159,47 @@ def build_bundle_bytes(snapshot: list[tuple[Path, bytes]] | None = None) -> byte
     return output.getvalue()
 
 
+def verify_bundle_structure(bundle_bytes: bytes,
+                            snapshot: list[tuple[Path, bytes]] | None = None) -> None:
+    snapshot = _validated_source_snapshot() if snapshot is None else snapshot
+    expected = {
+        f"{ROOT_NAME}/{path.relative_to(SKILL_ROOT).as_posix()}": data
+        for path, data in snapshot
+    }
+    try:
+        with zipfile.ZipFile(io.BytesIO(bundle_bytes)) as archive:
+            infos = archive.infolist()
+            names = [info.filename for info in infos]
+            if len(names) != len(set(names)):
+                raise PackageError("bundle 含重复路径")
+            if set(names) != set(expected):
+                missing = sorted(set(expected) - set(names))
+                extra = sorted(set(names) - set(expected))
+                raise PackageError(f"bundle allowlist 不一致：missing={missing}, extra={extra}")
+            for info in infos:
+                path = PurePosixPath(info.filename)
+                mode = (info.external_attr >> 16) & 0o177777
+                if path.is_absolute() or ".." in path.parts or info.is_dir():
+                    raise PackageError(f"bundle 含不安全路径：{info.filename}")
+                if stat.S_IFMT(mode) != stat.S_IFREG:
+                    raise PackageError(f"bundle 条目不是普通文件：{info.filename}")
+                expected_mode = 0o755 if PurePosixPath(info.filename).suffix == ".py" else 0o644
+                if stat.S_IMODE(mode) != expected_mode:
+                    raise PackageError(f"bundle 权限不一致：{info.filename}")
+                if info.file_size != len(expected[info.filename]):
+                    raise PackageError(f"bundle 文件大小不一致：{info.filename}")
+                if archive.read(info) != expected[info.filename]:
+                    raise PackageError(f"bundle 文件内容不一致：{info.filename}")
+    except zipfile.BadZipFile as error:
+        raise PackageError("bundle 不是有效 ZIP") from error
+
+
 def read_source_contract(text: str | None = None) -> dict[str, str]:
     if text is None:
         text = _safe_regular_file(SKILL_ROOT / "SOURCE.md", maximum=1024 * 1024,
                                   label="source contract").decode("utf-8")
     result = {}
-    for key in ("source_commit", "starter_digest", "distribution_boundary", "license_status"):
+    for key in ("starter_source_commit", "starter_digest", "distribution_boundary", "license_status"):
         match = re.search(rf"^- {key}: `([^`]+)`$", text, re.MULTILINE)
         if not match:
             raise PackageError(f"SOURCE.md 缺少 {key}")
@@ -175,7 +221,10 @@ def write_bundle() -> dict[str, Any]:
     bundle = DIST_ROOT / BUNDLE_NAME
     bundle.write_bytes(data)
     (DIST_ROOT / f"{BUNDLE_NAME}.sha256").write_text(f"{sha256(data)}  {BUNDLE_NAME}\n", encoding="utf-8")
-    return {"status": "ok", "bundle": str(bundle.relative_to(REPO_ROOT)), "sha256": sha256(data), "size": len(data)}
+    return {"status": "ok", "artifact_status": "build-only",
+            "distribution_authentication": "unverified",
+            "bundle": str(bundle.relative_to(REPO_ROOT)), "sha256": sha256(data),
+            "size": len(data)}
 
 
 def verify_release_trust(*, zip_path: Path, attestation_path: Path, trusted_verifier: Path | None,
@@ -197,11 +246,11 @@ def create_release_attestation(bundle_bytes: bytes, signer_fingerprint: str) -> 
         "package_name": BUNDLE_NAME,
         "package_sha256": sha256(bundle_bytes),
         "package_size": len(bundle_bytes),
-        "source_commit": source["source_commit"],
+        "starter_source_commit": source["starter_source_commit"],
         "starter_digest": source["starter_digest"],
         "allowlist_digest": allowlist_digest(snapshot),
         "builder_version": "bootstrap-second-brain-package-v1",
-        "release_boundary": "owner-private-pilot",
+        "release_boundary": "public-github-mit",
         "zip_namespace": "twinmind-bundle-v1",
         "attestation_namespace": "twinmind-release-attestation-v1",
         "signer_fingerprint": signer_fingerprint,
@@ -288,6 +337,7 @@ def verify_signed_release(*, trusted_verifier: Path, verifier_sha256: str, publi
     expected = create_release_attestation(zip_bytes, independent_fingerprint)
     if attestation != expected:
         raise PackageError("release attestation 与 bundle/source/allowlist 不一致")
+    verify_bundle_structure(zip_bytes)
     return {"distribution_authentication": "verified", "command_outcome": "success",
             "package_sha256": sha256(zip_bytes), "signer_fingerprint": independent_fingerprint}
 
@@ -299,12 +349,9 @@ def check_bundle() -> dict[str, Any]:
     second = build_bundle_bytes(second_snapshot)
     if first != second:
         raise PackageError("同一 source digest 两次打包字节不一致")
-    with zipfile.ZipFile(io.BytesIO(first)) as archive:
-        for info in archive.infolist():
-            path = PurePosixPath(info.filename)
-            if path.is_absolute() or ".." in path.parts:
-                raise PackageError("bundle 含 zip-slip entry")
-    return {"status": "ok", "sha256": sha256(first), "size": len(first),
+    verify_bundle_structure(first, second_snapshot)
+    return {"status": "ok", "artifact_status": "build-only",
+            "sha256": sha256(first), "size": len(first),
             "allowlist_digest": allowlist_digest(second_snapshot), "distribution_authentication": "unverified"}
 
 

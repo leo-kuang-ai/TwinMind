@@ -17,7 +17,7 @@ deepened: 2026-08-07
 | 项目 | 决策 |
 |---|---|
 | 目标 | 使用 我的第二大脑 Demo，帮助用户生成安全、可恢复、可继续运行的个人第二大脑 |
-| 推荐方案 | 采用“工具准备 → Vault 初始化 → 个性化 → Git 基线 → 验证”的对话式 Skill、确定性 CLI、宿主中立 Starter Kit、外部私有运行状态、不可变计划授权、有界 inventory 和验签分发 |
+| 推荐方案 | 采用“工具准备 → Vault 初始化 → 个性化 → Git 基线 → 验证”的对话式 Skill、确定性 CLI、宿主中立 Starter Kit、外部私有运行状态、不可变计划授权、有界 inventory、MIT GitHub 源码发布和独立 ZIP 强制验签分发 |
 | 产品权威 | 我的第二大脑/ 是 Starter Kit 内容权威；用户确认是个性化事实权威；脚本结果是机械动作与验证权威 |
 | v0.1 支持 | Codex 为唯一正式宿主；tool-prepare、create 和 verify 完整支持；resume 只恢复 create run；adopt-existing 只读盘点并生成接管计划 |
 | 决策重点 | 工具准备首阶段、Git 硬门禁与隐式执行面、baseline 前后恢复、storage_domain、零目标写入、授权防漂移、发布验签、inventory 预算和宿主适配边界 |
@@ -266,8 +266,8 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
   - 理由：源码、字节完整性、发布者认证、安装和运行验证必须分层；自安装会把初始化 Vault 的授权扩大成修改宿主配置。
   - Bootstrap 边界：接收方先用预先可信的 OpenSSH verifier 直接验证 zip 原始字节，再验证 attestation 原始字节；两者通过前不得执行候选 bundle、候选源码 checkout 或其中的 `package_skill.py`。包内 verifier 不能参与首次来源认证。
 
-- KTD17. 许可边界：v0.1 bundle 默认只用于 Owner 授权的私有 pilot，并携带 SOURCE.md、source commit、Starter digest 和发布边界；跨机器 private pilot 必须先通过 zip direct signature、attestation signature、独立渠道 Owner 公钥指纹和包摘要验证。在 Owner 明确许可证与第三方归属前，不得公开分发或宣称开源。
-  - 理由：技术可打包不等于具备公开再分发权，不能替 Owner 选择许可证。
+- KTD17. 许可与发布边界：Owner 已决定 v0.1 以 MIT License 公开发布，仓库根目录、Canonical Starter 和 Skill bundle 均携带 LICENSE。GitHub 源码发布前必须确认 staged、unstaged、untracked 均为空并冻结 `release_commit`；只有 canonical 远端分支 SHA 与该 commit 一致，且远端 commit 包含 LICENSE、README 和 SOURCE，才视为正式源码发布成功。独立 ZIP 是单独发布面；未通过 zip direct signature、attestation signature、独立渠道 Owner 公钥指纹、包摘要和包内容校验时，不得跨机器分发或安装。
+  - 理由：开源许可、GitHub 源码发布、字节完整性和独立包的发布者身份认证是不同证据层，不得相互替代。
 
 - KTD18. 工具准备首阶段：每个 create run 必须先完成 Python runtime preflight，再执行 tool-probe、tool-plan 和 tool-verify；Python 或 Git 可执行文件未通过时禁止进入路径确认和 Vault 目标写入，目标 Git 边界与 baseline 证据在后续 target plan/apply 中继续失败关闭；WorkBuddy 或 Obsidian 可由用户明确暂缓并记录影响。
   - 理由：先发现环境缺口比写入中途失败更安全，也使安装动作、Vault 初始化授权和完成声明保持分离。
@@ -300,7 +300,7 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
   - 理由：自定义 `--state-dir` 即使 owner/mode 合法，也可能被云同步、网络挂载或可移动介质复制到额外信任域；POSIX 私有权限不能证明数据只留在本机固定磁盘。
   - 漂移：state root identity、storage_domain、分类证据或加密收据变化后，旧 plan 不得继续用于 confidential 持久化。
 
-- KTD26. v0.1 私有 pilot 的发布签名 provider 固定为 OpenSSH `ssh-keygen -Y sign/verify`，zip namespace 固定为 `twinmind-bundle-v1`，attestation namespace 固定为 `twinmind-release-attestation-v1`，所有参数以数组传递且不经过 shell。`dist/bootstrap-second-brain-v0.1.zip.sig` 直接签 zip 原始字节；`dist/release-attestation.json` 绑定包名、SHA-256、大小、source commit、Starter digest、package allowlist digest、构建器版本、发布边界和 signer fingerprint，`dist/release-attestation.json.sig` 签 attestation 原始字节。
+- KTD26. 独立 ZIP 的发布签名 provider 固定为 OpenSSH `ssh-keygen -Y sign/verify`，zip namespace 固定为 `twinmind-bundle-v1`，attestation namespace 固定为 `twinmind-release-attestation-v1`，所有参数以数组传递且不经过 shell。`dist/bootstrap-second-brain-v0.1.zip.sig` 直接签 zip 原始字节；`dist/release-attestation.json` 绑定包名、SHA-256、大小、Starter source commit、Starter digest、package allowlist digest、构建器版本、发布边界和 signer fingerprint，`dist/release-attestation.json.sig` 签 attestation 原始字节。
   - 信任根：验证端使用从 bundle 之外独立获得并人工核对的 Owner 公钥指纹构造 allowed signers；bundle、SOURCE.md 或 attestation 内自带的公钥/指纹只能作声明，不能自证可信。
   - 失败边界：缺少可信 `ssh-keygen`、独立指纹、匹配公钥或任一有效签名时返回 action_required。bundle 只能留在 Owner 当前机器用于本地验证，不得声明 authenticated distribution 或进入跨机器 pilot。
   - 密钥边界：私钥、agent socket、allowed-signers 本地信任文件和签名临时材料不得进入仓库、bundle、state root、eval result 或日志。
@@ -836,18 +836,18 @@ Skill 可以输出人工步骤，也可以在独立 operation 授权后打开官
 
 ### Distribution Authentication Contract
 
-确定性 zip 与 `.sha256` 是内容完整性层，不是发布者身份层。接收方使用候选包之外、已按 KTD22/KTD23 验证的 OpenSSH verifier 完成 trust bootstrap；候选包和候选源码在此之前保持纯数据。跨机器 private pilot 必须按以下顺序满足：
+确定性 zip 与 `.sha256` 是内容完整性层，不是发布者身份层。接收方使用候选包之外、已按 KTD22/KTD23 验证的 OpenSSH verifier 完成 trust bootstrap；候选包和候选源码在此之前保持纯数据。需要对独立 ZIP 执行发布者来源认证时，必须按以下顺序满足：
 
 1. 将 zip、attestation 和 signature 作为不执行的普通文件，先验证文件类型、owner/mode、非 symlink 和发布输入大小上限。
 2. allowed signers 使用的 Owner 公钥及其指纹来自 bundle 之外的独立渠道；验证前人工核对精确 OpenSSH SHA-256 指纹。包内自带信任材料不能满足这一条件。
 3. 使用预先可信的 `ssh-keygen` 和 namespace `twinmind-bundle-v1` 直接验证 zip 原始字节的 signature，再使用 namespace `twinmind-release-attestation-v1` 验证 attestation 原始字节的 signature；两者通过前不解析 attestation JSON、不执行候选 Python 或候选脚本。
 4. 双签名通过后，候选 bundle 已完成 Owner 来源认证；此时才可由受信任 Python runtime 在隔离临时目录使用包内 verifier 解析 canonical attestation schema，并以流式 SHA-256 复核实际 zip 的文件名、字节大小和摘要。
-5. attestation 中的 source commit、Starter digest、package allowlist digest、构建器版本和私有发布边界与解包后 SOURCE.md/manifest 一致。
+5. attestation 中的 Starter source commit、Starter digest、package allowlist digest、构建器版本和 `public-github-mit` 发布边界与解包后 SOURCE.md/manifest 一致。独立 ZIP 的精确字节内容由 package SHA-256、allowlist digest 和双签名共同绑定，不把 Starter source commit 误报为整个 bundle 的仓库提交。
 6. 最后执行结构、权限、allowlist、绝对路径、symlink 和 zip-slip 检查；全部通过后才允许安装或运行 Skill。双签名通过不能补偿包内容或结构失败。
 
 签名和验证调用必须使用按 KTD22/KTD23 预先验证并绑定 tool identity digest 的 `ssh-keygen`、两个固定 namespace 与参数数组，不继承 shell alias，不接受 attestation 或 Vault 内容提供的命令参数。维护者可信源码 checkout 中的 `package_skill.py` 可以生成 artifact 和执行发布前复核；接收方只有在 zip direct signature 与 attestation signature 都通过后才可执行候选副本完成 schema、摘要和结构复核。私钥和 allowed-signers 信任文件由 Owner 在仓库与 state root 之外管理；日志只记录 signer fingerprint、artifact/attestation digest、验证结果和时间，不记录私钥路径、agent socket 或密钥材料。
 
-若当前机器没有可信 verifier、独立指纹或匹配公钥，package check 仍可证明本机 deterministic build 和结构，但必须报告 `distribution_authentication=unverified` 与 action_required；artifact 不得跨机器传播或声称来自 Owner。许可证与签名是独立门禁：签名有效不等于允许公开分发。
+若当前机器没有可信 verifier、独立指纹或匹配公钥，package check 仍可证明本机 deterministic build 和结构，但必须报告 `artifact_status=build-only` 与 `distribution_authentication=unverified`；该 ZIP 不得跨机器分发或安装，也不得声称 authenticated distribution。这不影响按 GitHub 远端 commit 独立判定 MIT 源码发布。许可证、源码发布与签名验证是独立门禁。
 
 ### Git, WorkBuddy and Obsidian Contract
 
@@ -926,7 +926,7 @@ Obsidian：
 | ADR-010 | create 使用 scaffold 与 personalize/environment 两个不可变 plan 批次 | 有证据证明单批次仍能保持授权和个性化内容不漂移 |
 | ADR-011 | activate 是人工闭环加只读评估，不是 v0.1 写入命令 | 有稳定、可恢复且不替用户裁决的 activation writer |
 | ADR-012 | canonical Skill 在 skills/；确定性 bundle 与摘要用于分发，不自安装、不修改 generated runtime | Codex 发布渠道提供正式、可验证的原生包合同 |
-| ADR-013 | v0.1 bundle 为私有 pilot artifact；公开分发等待 Owner 明确许可证与归属 | 已有经批准的 LICENSE 与第三方 notices |
+| ADR-013 | v0.1 以 MIT License 公开发布；GitHub 源码发布要求干净工作树、冻结 release commit、canonical 远端 SHA 与远端许可文件核验；独立 ZIP 只能在双签名和包内容校验成功后分发 | Owner 更改许可协议或正式发布通道 |
 | ADR-014 | tool-prepare 是 create 前置阶段；Python runtime-required，Git product-required，WorkBuddy/Obsidian recommended，社区插件 optional | 产品层级、运行时或首阶段用户旅程改变 |
 | ADR-015 | v0.1 只做 guided installation，不提供通用自动安装器，不自动 sudo 或修改全局配置 | 有安全、可恢复、跨平台的正式安装 provider 合同 |
 | ADR-016 | 社区插件默认零安装，真实问题触发后逐项评估和授权 | pilot 证据证明固定插件基线收益高于供应链与维护风险 |
@@ -935,7 +935,7 @@ Obsidian：
 | ADR-019 | 版本化 tool identity manifest 拥有官方 URL、CLI/verifier 来源类型和 app bundle/signing identity；有效签名或 GUI 不能单独证明官方来源 | 官方提供稳定、可机器验证的身份 API 或发布收据 |
 | ADR-020 | recover 以 baseline 为语义分界；baseline 前保守删除未提交 run 文件，baseline 后只做保留历史的补偿提交或人工 Git 恢复；append-only 只追加 | 产品明确允许历史重写且提供同等可审计、可恢复的专用 provider |
 | ADR-021 | state root 使用五类 storage_domain；confidential runtime_state 仅 local_fixed 默认允许，其他域需要绑定当前目录的已验证加密收据 | v0.1 引入并验证了跨域加密存储 provider，或产品明确收紧为全量仅 session_only |
-| ADR-022 | 跨机器 private pilot 使用 OpenSSH zip/attestation 双签名、两个固定 namespace 和独立渠道 Owner 公钥指纹；无可信 verifier 时只允许 Owner 本机未认证 artifact | Codex 提供同等或更强的原生签名、透明日志与信任分发合同 |
+| ADR-022 | 独立 ZIP 的发布者来源认证使用 OpenSSH zip/attestation 双签名、两个固定 namespace 和独立渠道 Owner 公钥指纹；无可信 verifier 时明确报告未认证 | Codex 提供同等或更强的原生签名、透明日志与信任分发合同 |
 | ADR-023 | v0.1 inventory 固定 personal-vault-v1 八项不可变预算并默认不跨文件系统；run-local 仅可收紧 effective limits，超限返回 incomplete/action_required | pilot 数据证明需要新的版本化 policy，且成本、安全和声明门禁已重新评审 |
 
 ### Source References
@@ -1093,7 +1093,7 @@ dist/
   - tool choice 缺失影响披露、确认时间或幂等键，或试图携带 operation approval/ready 结论时拒绝；同一幂等键的相同输入只能产生一个状态事件。
   - tool evidence 缺失观察来源、时间或外部动作收据引用时拒绝；opened/UI 观察不能单独满足 official_verified 或 ready 不变量。
   - `subject_kind=host_tool` 的 plan 不得含 target identity 或 Vault operation，只允许绑定 identity manifest 中的 `open-source`/`open-app` 动作；其他 subject 缺失其必需 identity 时拒绝。
-  - release attestation 缺少 zip 摘要/大小、source commit、Starter/allowlist digest、两个固定 namespace、signer fingerprint 或私有发布边界时拒绝；schema-valid 不得等同于 zip/attestation 双签名或信任根已验证。
+  - release attestation 缺少 zip 摘要/大小、Starter source commit、Starter/allowlist digest、两个固定 namespace、signer fingerprint 或 `public-github-mit` 发布边界时拒绝；schema-valid 不得等同于 zip/attestation 双签名或信任根已验证。
   - inventory policy 缺失任一冻结上限、同 ID 发生任何语义变化、effective limit 高于 canonical、plan policy digest 不匹配，或 incomplete 结果被标为 success/verified 时拒绝。
   - tool identity manifest 存在重复 tool/platform 键、缺失 Python/Git/OpenSSH verifier 来源或 app bundle/signing identity、初始 URL 非精确 HTTPS、`source_as_of` 缺失或 digest 不匹配时拒绝。
   - result 声明 initialized 但缺失 baseline_commit_oid、仓库边界证据或 baseline tree 校验时拒绝。
@@ -1230,12 +1230,12 @@ dist/
   - 同一 source digest 两次打包的字节与 SHA-256 相同；包不含 symlink、密钥、缓存、运行状态、eval results、测试临时目录、绝对路径、`..` 或 zip-slip entry。
   - allowlist 缺少 tool-choice.schema.json 或 tool-evidence.schema.json、包内 schema 与源码摘要不一致，或任一 canonical schema 未通过离线 contract validator 时打包失败。
   - 分发包在隔离临时 skill root 解包后通过结构校验并只发现一个 bootstrap-second-brain Skill；真实安装仍需用户显式执行宿主支持的安装流程。
-  - release attestation 与 zip 的名称、大小、SHA-256、source commit、Starter/allowlist digest 或发布边界任一不一致时验证失败。
+  - release attestation 与 zip 的名称、大小、SHA-256、Starter source commit、Starter/allowlist digest 或发布边界任一不一致时验证失败。
   - 正确独立指纹与匹配公钥可分别验证 zip direct signature 和 attestation signature；包内替换公钥、错误指纹、交叉/错误 namespace、篡改任一 artifact/signature、ssh-keygen identity digest 漂移或缺少可信 OpenSSH bootstrap 时不得进入跨机器 pilot。
   - 候选 zip、候选 checkout 和候选 package_skill.py 内放置执行哨兵；zip 与 attestation 双签名完成前哨兵始终未触发，完成后才允许在隔离环境执行摘要、schema 和结构复核。
   - 无可信 verifier 时仍可报告 deterministic/structure check，但必须输出 distribution_authentication=unverified、action_required，并禁止 authenticated distribution 声明。
   - 私钥、agent socket、allowed-signers 本地文件和签名临时材料不进入 package allowlist、bundle、state、日志或 eval artifact。
-  - SOURCE.md 记录 source commit、Starter digest、私有 pilot 边界和公开分发许可门禁；缺失或与 manifest 不一致时打包失败。
+  - SOURCE.md 记录 Starter source commit、Starter digest、`public-github-mit` 发布边界和 MIT 许可状态；缺失或与 manifest 不一致时打包失败。
   - 八项 inventory 预算分别用确定性 fixture 命中；所有超限结果均为 incomplete/action_required、报告不超过 32 MiB、target writer 未调用且目标快照一致。
   - 统计运行时间、工具调用次数、访谈轮数和状态文件大小，但不以成本指标替代正确性。
 - **Verification:** structure_contract、distribution_authentication、behavior_quality、runtime_cost、field_outcome 分层报告；跨机器 pilot 的 distribution_authentication 必须为 verified，validated、pilot 和 proven 门禁按 Promotion 状态执行。
@@ -1382,10 +1382,10 @@ dist/
 - [ ] Vault 内收据只含相对路径和白名单字段，不泄漏 state root、宿主标识或访谈答案。
 - [ ] Skill trigger、behavior、safety 和声明上限 eval 通过。
 - [ ] 确定性 bundle 与 SHA-256 可复核；包不含 generated runtime、私有状态、eval results、缓存、密钥或绝对路径。
-- [ ] zip direct signature 与 attestation signature 分别使用固定 namespace；attestation 绑定包摘要、source/Starter/allowlist digest 和私有发布边界，跨机器 pilot 只接受独立渠道核对的 Owner 公钥指纹。
+- [ ] zip direct signature 与 attestation signature 分别使用固定 namespace；attestation 绑定包摘要、source/Starter/allowlist digest 和 `public-github-mit` 发布边界，独立 ZIP 来源认证只接受独立渠道核对的 Owner 公钥指纹。
 - [ ] 接收方 trust bootstrap 只使用预先可信的 OpenSSH verifier；双签名通过前不解析 attestation，候选 bundle、候选 checkout 与包内 verifier 保持零执行。
-- [ ] 无可信 OpenSSH verifier、独立指纹或有效签名时，artifact 仅留在 Owner 本机并报告 distribution_authentication=unverified，不宣称 authenticated distribution。
-- [ ] SOURCE.md 与 manifest/source commit 一致；签名不补偿许可证门禁，未获 Owner 许可证裁决时 bundle 不公开分发。
+- [ ] 无可信 OpenSSH verifier、独立指纹或有效签名时，独立 ZIP 报告 artifact_status=build-only 与 distribution_authentication=unverified，不得跨机器分发、安装或宣称 authenticated distribution；GitHub MIT 源码发布按冻结 release commit 及远端 SHA/文件独立判定。
+- [ ] SOURCE.md 的 Starter source commit/digest 与 manifest 一致；仓库根目录、Canonical Starter 和 Skill bundle 均包含 MIT LICENSE，许可、源码发布与签名证据分层报告。
 - [ ] 没有 P0/P1 未决方案问题。
 - [ ] 没有绝对用户路径、密钥、缓存、临时 eval workspace 或废弃实现残留。
 - [ ] README 和 CHANGELOG 准确描述 v0.1 支持边界。

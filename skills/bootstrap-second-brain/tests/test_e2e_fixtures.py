@@ -40,6 +40,8 @@ class EndToEndFixtureTests(unittest.TestCase):
         self.assertEqual(first, second)
         with zipfile.ZipFile(BytesIO(first)) as archive:
             names = archive.namelist()
+            self.assertIn("bootstrap-second-brain/LICENSE", names)
+            self.assertIn("bootstrap-second-brain/assets/starter-kit/LICENSE", names)
             self.assertIn("bootstrap-second-brain/SKILL.md", names)
             self.assertIn("bootstrap-second-brain/schemas/tool-choice.schema.json", names)
             self.assertIn("bootstrap-second-brain/schemas/tool-evidence.schema.json", names)
@@ -47,13 +49,34 @@ class EndToEndFixtureTests(unittest.TestCase):
             self.assertFalse(any(info.is_dir() is False and (info.external_attr >> 16) & 0o170000 == 0o120000
                                  for info in archive.infolist()))
 
-    def test_source_contract_matches_current_starter_and_private_boundary(self) -> None:
+    def test_source_contract_matches_current_starter_and_public_mit_boundary(self) -> None:
         source = self.package.read_source_contract()
         starter = json.loads((SKILL / "manifests/starter-v1.json").read_text(encoding="utf-8"))
-        self.assertEqual(source["source_commit"], starter["source"]["commit"])
+        self.assertEqual(source["starter_source_commit"], starter["source"]["commit"])
         self.assertEqual(source["starter_digest"], starter["source"]["tree_digest"])
-        self.assertEqual(source["distribution_boundary"], "owner-private-pilot")
-        self.assertEqual(source["license_status"], "owner-decision-required")
+        self.assertEqual(source["distribution_boundary"], "public-github-mit")
+        self.assertEqual(source["license_status"], "MIT")
+        self.assertEqual((ROOT / "LICENSE").read_bytes(), (SKILL / "LICENSE").read_bytes())
+        self.assertEqual((ROOT / "LICENSE").read_bytes(),
+                         (ROOT / "我的第二大脑/LICENSE").read_bytes())
+
+    def test_release_policy_rejects_license_or_boundary_drift(self) -> None:
+        valid_license = (SKILL / "LICENSE").read_text(encoding="utf-8")
+        with self.assertRaises(self.package.PackageError):
+            self.package.validate_release_policy(
+                {"distribution_boundary": "owner-private-pilot", "license_status": "MIT"},
+                valid_license,
+            )
+        with self.assertRaises(self.package.PackageError):
+            self.package.validate_release_policy(
+                {"distribution_boundary": "public-github-mit", "license_status": "MIT"},
+                "MIT License\n\n",
+            )
+
+    def test_package_write_is_build_only_until_release_verification(self) -> None:
+        result = self.package.write_bundle()
+        self.assertEqual(result["artifact_status"], "build-only")
+        self.assertEqual(result["distribution_authentication"], "unverified")
 
     def test_all_eval_suites_pass_without_writing_results_into_bundle(self) -> None:
         report = self.evals.run_all()
@@ -136,6 +159,28 @@ class EndToEndFixtureTests(unittest.TestCase):
             )
             self.assertEqual(cli_result.returncode, 0, cli_result.stdout + cli_result.stderr)
             self.assertEqual(json.loads(cli_result.stdout)["distribution_authentication"], "verified")
+
+            invalid_bundle = root / "invalid.zip"
+            invalid_bundle.write_bytes(b"signed but not a zip")
+            invalid_attestation = root / "invalid-attestation.json"
+            invalid_attestation.write_text(json.dumps(
+                self.package.create_release_attestation(invalid_bundle.read_bytes(), fingerprint),
+                ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+            subprocess.run([str(verifier), "-Y", "sign", "-f", str(key),
+                            "-n", "twinmind-bundle-v1", str(invalid_bundle)], check=True)
+            subprocess.run([str(verifier), "-Y", "sign", "-f", str(key),
+                            "-n", "twinmind-release-attestation-v1", str(invalid_attestation)], check=True)
+            with self.assertRaises(self.package.PackageError):
+                self.package.verify_signed_release(
+                    trusted_verifier=verifier,
+                    verifier_sha256=hashlib.sha256(verifier.read_bytes()).hexdigest(),
+                    public_key=key.with_suffix(".pub"), allowed_signers=allowed,
+                    principal="owner", independent_fingerprint=fingerprint,
+                    zip_path=invalid_bundle,
+                    zip_signature=Path(str(invalid_bundle) + ".sig"),
+                    attestation_path=invalid_attestation,
+                    attestation_signature=Path(str(invalid_attestation) + ".sig"),
+                )
 
     def test_fixture_manifest_covers_required_matrix(self) -> None:
         manifest = json.loads((SKILL / "evals/fixtures/fixture-manifest.json").read_text(encoding="utf-8"))

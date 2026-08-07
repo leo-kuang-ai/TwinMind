@@ -1,10 +1,10 @@
 # Source 与分发边界
 
-- source_commit: `99e85d183c62027d992e4068b2c08bf49f123fe6`
-- starter_digest: `cae22e7ffbe2827103ec0c1525995b51963e818280ddb73164aff2ed2a635c46`
-- distribution_boundary: `owner-private-pilot`
-- license_status: `owner-decision-required`
+- starter_source_commit: `82cdef9af2ed1064657be9b59447ecd2336b8153`
+- starter_digest: `5cd46ec97c0f3f1a2fada5beb983f013fcf4a0878d722e055539c1905bdde903`
+- distribution_boundary: `public-github-mit`
+- license_status: `MIT`
 - canonical_source: `skills/bootstrap-second-brain/`
 - starter_source: `我的第二大脑/`
 
-此 Skill 在 Owner 明确许可证与第三方归属前不得公开分发或宣称开源。SHA-256 只证明字节一致；跨机器 private pilot 还需要 bundle 与 attestation 双签名、独立渠道 Owner 公钥指纹和预先可信 OpenSSH verifier。
+此 Skill 采用同目录 `LICENSE` 中的 MIT License。正式 GitHub 源码发布必须在工作树干净后冻结 `release_commit`，并核验 canonical 远端分支 SHA 及该提交中的 LICENSE/SOURCE 文件。独立 ZIP 的 SHA-256 只证明字节一致；未通过 bundle/attestation 双签名、独立渠道 Owner 公钥指纹、预先可信 OpenSSH verifier 和包内容校验的 ZIP，不得跨机器分发或安装。
