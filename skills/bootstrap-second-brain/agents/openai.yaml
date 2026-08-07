@@ -1,0 +1,4 @@
+interface:
+  display_name: "初始化第二大脑"
+  short_description: "基于 TwinMind Demo 安全创建、验证和恢复个人第二大脑"
+  default_prompt: "使用 $bootstrap-second-brain 基于 TwinMind Demo 安全初始化我的个人第二大脑。"

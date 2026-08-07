@@ -1,0 +1,150 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import hashlib
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+import zipfile
+from io import BytesIO
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[3]
+SKILL = ROOT / "skills/bootstrap-second-brain"
+PACKAGE_SCRIPT = SKILL / "scripts/package_skill.py"
+EVAL_SCRIPT = SKILL / "evals/run_evals.py"
+
+
+def load(path: Path, name: str):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class EndToEndFixtureTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not PACKAGE_SCRIPT.is_file() or not EVAL_SCRIPT.is_file():
+            raise AssertionError("缺少 package_skill.py 或 run_evals.py")
+        cls.package = load(PACKAGE_SCRIPT, "package_skill")
+        cls.evals = load(EVAL_SCRIPT, "run_evals")
+
+    def test_bundle_is_deterministic_complete_and_safe(self) -> None:
+        first = self.package.build_bundle_bytes()
+        second = self.package.build_bundle_bytes()
+        self.assertEqual(first, second)
+        with zipfile.ZipFile(BytesIO(first)) as archive:
+            names = archive.namelist()
+            self.assertIn("bootstrap-second-brain/SKILL.md", names)
+            self.assertIn("bootstrap-second-brain/schemas/tool-choice.schema.json", names)
+            self.assertIn("bootstrap-second-brain/schemas/tool-evidence.schema.json", names)
+            self.assertFalse(any("/tests/" in name or "/evals/" in name or ".." in Path(name).parts for name in names))
+            self.assertFalse(any(info.is_dir() is False and (info.external_attr >> 16) & 0o170000 == 0o120000
+                                 for info in archive.infolist()))
+
+    def test_source_contract_matches_current_starter_and_private_boundary(self) -> None:
+        source = self.package.read_source_contract()
+        starter = json.loads((SKILL / "manifests/starter-v1.json").read_text(encoding="utf-8"))
+        self.assertEqual(source["source_commit"], starter["source"]["commit"])
+        self.assertEqual(source["starter_digest"], starter["source"]["tree_digest"])
+        self.assertEqual(source["distribution_boundary"], "owner-private-pilot")
+        self.assertEqual(source["license_status"], "owner-decision-required")
+
+    def test_all_eval_suites_pass_without_writing_results_into_bundle(self) -> None:
+        report = self.evals.run_all()
+        self.assertEqual(report["status"], "passed")
+        self.assertEqual(set(report["suites"]), {"trigger", "behavior", "safety", "claim"})
+
+    def test_untrusted_release_stays_local_and_does_not_execute_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            sentinel = Path(temp) / "executed"
+            result = self.package.verify_release_trust(
+                zip_path=Path(temp) / "candidate.zip",
+                attestation_path=Path(temp) / "attestation.json",
+                trusted_verifier=None,
+                independent_fingerprint=None,
+                execution_sentinel=sentinel,
+            )
+            self.assertEqual(result["distribution_authentication"], "unverified")
+            self.assertEqual(result["command_outcome"], "action_required")
+            self.assertFalse(sentinel.exists())
+
+    def test_verify_release_cli_exposes_external_trust_inputs(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(PACKAGE_SCRIPT), "--verify-release", "--help"],
+            cwd=ROOT, text=True, capture_output=True, check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for option in (
+            "--trusted-verifier", "--verifier-sha256", "--public-key", "--allowed-signers",
+            "--principal", "--independent-fingerprint", "--zip", "--zip-signature",
+            "--attestation", "--attestation-signature",
+        ):
+            self.assertIn(option, result.stdout)
+
+    @unittest.skipUnless(shutil.which("ssh-keygen"), "需要 OpenSSH ssh-keygen")
+    def test_external_openssh_double_signature_verifies_both_namespaces(self) -> None:
+        verifier = Path(shutil.which("ssh-keygen")).resolve()
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            key = root / "owner"
+            subprocess.run([str(verifier), "-q", "-t", "ed25519", "-N", "", "-f", str(key)], check=True)
+            fingerprint_output = subprocess.run(
+                [str(verifier), "-lf", str(key.with_suffix(".pub")), "-E", "sha256"],
+                text=True, capture_output=True, check=True,
+            ).stdout
+            fingerprint = next(part for part in fingerprint_output.split() if part.startswith("SHA256:"))
+            allowed = root / "allowed_signers"
+            allowed.write_text(f"owner {key.with_suffix('.pub').read_text(encoding='utf-8')}", encoding="utf-8")
+            bundle = root / "bundle.zip"
+            bundle.write_bytes(self.package.build_bundle_bytes())
+            attestation = root / "attestation.json"
+            attestation.write_text(json.dumps(
+                self.package.create_release_attestation(bundle.read_bytes(), fingerprint),
+                ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+            subprocess.run([str(verifier), "-Y", "sign", "-f", str(key), "-n", "twinmind-bundle-v1", str(bundle)], check=True)
+            subprocess.run([str(verifier), "-Y", "sign", "-f", str(key), "-n", "twinmind-release-attestation-v1", str(attestation)], check=True)
+            result = self.package.verify_signed_release(
+                trusted_verifier=verifier,
+                verifier_sha256=hashlib.sha256(verifier.read_bytes()).hexdigest(),
+                public_key=key.with_suffix(".pub"), allowed_signers=allowed, principal="owner",
+                independent_fingerprint=fingerprint, zip_path=bundle,
+                zip_signature=Path(str(bundle) + ".sig"), attestation_path=attestation,
+                attestation_signature=Path(str(attestation) + ".sig"),
+            )
+            self.assertEqual(result["distribution_authentication"], "verified")
+            cli_result = subprocess.run(
+                [
+                    sys.executable, str(PACKAGE_SCRIPT), "--verify-release",
+                    "--trusted-verifier", str(verifier),
+                    "--verifier-sha256", hashlib.sha256(verifier.read_bytes()).hexdigest(),
+                    "--public-key", str(key.with_suffix(".pub")),
+                    "--allowed-signers", str(allowed),
+                    "--principal", "owner",
+                    "--independent-fingerprint", fingerprint,
+                    "--zip", str(bundle),
+                    "--zip-signature", str(bundle) + ".sig",
+                    "--attestation", str(attestation),
+                    "--attestation-signature", str(attestation) + ".sig",
+                ],
+                cwd=ROOT, text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(cli_result.returncode, 0, cli_result.stdout + cli_result.stderr)
+            self.assertEqual(json.loads(cli_result.stdout)["distribution_authentication"], "verified")
+
+    def test_fixture_manifest_covers_required_matrix(self) -> None:
+        manifest = json.loads((SKILL / "evals/fixtures/fixture-manifest.json").read_text(encoding="utf-8"))
+        required = {"missing-target", "empty-target", "nonempty-vault", "existing-twinmind",
+                    "python-missing", "python-312-no-alias", "git-missing", "parent-git",
+                    "unicode", "case-conflict", "symlink", "readonly", "copy-interrupted",
+                    "inventory-entries", "inventory-filesystem-boundary", "baseline-failed"}
+        self.assertTrue(required <= {item["id"] for item in manifest["fixtures"]})
+
+
+if __name__ == "__main__":
+    unittest.main()

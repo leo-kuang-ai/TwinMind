@@ -78,3 +78,10 @@
 graphify-out/
 .graphify/
 # spec-first:end
+
+# TwinMind bootstrap-second-brain local verification and release outputs
+dist/
+skills/bootstrap-second-brain/evals/results/
+skills/bootstrap-second-brain/**/__pycache__/
+skills/bootstrap-second-brain/**/*.pyc
+skills/bootstrap-second-brain/**/*.sig

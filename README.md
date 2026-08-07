@@ -21,11 +21,23 @@
 
 ## 15 分钟启动
 
-1. 复制“我的第二大脑”到本地；
-2. 填写 `10_当前工作台/00_第二大脑启动契约.md`；
-3. 在 `00_待处理/` 写下最近反复出现的三个真实问题；
-4. 只选一个问题，使用 `90_模板/` 跑通来源 → 知识 → 项目/决策 → 交付；
-5. 初始化 Git，并在临时副本做一次恢复演练。
+推荐使用 `skills/bootstrap-second-brain/` 中的 Codex Skill：
+
+1. 先完成可信 Python 3.11+、Git、WorkBuddy 和 Obsidian 的工具准备；Git 是 create 硬门禁，WorkBuddy 与 Obsidian 可以明确暂缓；
+2. 让 Skill 只读探测目标，并审阅带摘要的 scaffold plan；
+3. 批准明确 operation 后生成 Starter，再完成最小访谈和独立 personalize plan；
+4. 建立只包含批准 Vault 路径的 Git baseline commit；
+5. 运行 verify，并用一个真实问题跑通来源 → 知识 → 项目/决策 → 交付 → 结果回写。
+
+也可以继续手工复制“我的第二大脑”，但不能跳过 Git 初始化、差异审查和恢复演练。
+
+## Skill 支持边界
+
+- v0.1 正式支持 Codex、macOS 和 Python 3.11+；Linux 仅保留文件系统兼容候选，Windows 延后。
+- 支持 create、verify、create-run resume，以及 adopt-existing 的只读 inventory/接管计划。
+- 默认离线，不自动 sudo、下载、安装社区插件、修改全局 Git 配置、创建 remote 或 push。
+- 分发包当前仅允许 Owner 私有 pilot；许可证尚待 Owner 裁决，不能公开分发或宣称开源。
+- 安装、结构生成、Git baseline 和 activated/proven 是不同证据层，不能相互补偿。
 
 ## 使用边界
 

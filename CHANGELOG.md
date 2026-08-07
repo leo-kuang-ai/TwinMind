@@ -9,3 +9,4 @@
   - 用户可感知的变更在末尾追加 `(user-visible)`
 
 - v1.14.0 2026-08-06 23:06:24 leokuang: 使用 spec-first 初始化项目
+- v1.15.0 2026-08-07 02:54:57 leokuang: 新增 TwinMind 第二大脑初始化 Skill、Git 硬门禁、只读审计、恢复与私有分发验证 (user-visible)

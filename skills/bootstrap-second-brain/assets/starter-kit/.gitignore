@@ -1,0 +1,25 @@
+# System
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+
+# Local runtime and rebuildable indexes
+.memory-os/
+.smart-env/
+
+# Obsidian device-local state
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+
+# Temporary output
+.trash/
+tmp/
+*.log

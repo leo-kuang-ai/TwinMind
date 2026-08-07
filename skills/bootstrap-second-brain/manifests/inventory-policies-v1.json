@@ -1,0 +1,24 @@
+{
+  "schema_version": "inventory-policies-v1",
+  "policies": [
+    {
+      "policy_id": "personal-vault-v1",
+      "limits": {
+        "entries": 50000,
+        "depth": 64,
+        "single_file_bytes": 1073741824,
+        "cumulative_read_bytes": 10737418240,
+        "elapsed_seconds": 600,
+        "report_bytes": 33554432,
+        "open_file_descriptors": 32,
+        "cross_filesystems": false
+      },
+      "on_limit": {
+        "stop_new_reads": true,
+        "inventory_status": "incomplete",
+        "command_outcome": "action_required"
+      }
+    }
+  ],
+  "effective_limits_rule": "may-only-tighten"
+}

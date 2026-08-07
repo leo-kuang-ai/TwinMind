@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "tools": [
+    {
+      "schema_version": 1,
+      "tool_id": "python",
+      "platform": "macos",
+      "kind": "cli",
+      "official_url": "https://www.python.org/",
+      "source_as_of": "2026-08-07",
+      "rotation_policy": "官方分发身份或包收据变化时重新取证并生成新 manifest digest",
+      "cli_source_types": ["system-signed", "official-signed", "package-receipt", "user-managed-approved"]
+    },
+    {
+      "schema_version": 1,
+      "tool_id": "git",
+      "platform": "macos",
+      "kind": "cli",
+      "official_url": "https://git-scm.com/",
+      "source_as_of": "2026-08-07",
+      "rotation_policy": "官方分发身份或包收据变化时重新取证并生成新 manifest digest",
+      "cli_source_types": ["system-signed", "official-signed", "package-receipt", "user-managed-approved"]
+    },
+    {
+      "schema_version": 1,
+      "tool_id": "ssh-keygen",
+      "platform": "macos",
+      "kind": "cli",
+      "official_url": "https://www.openssh.com/",
+      "source_as_of": "2026-08-07",
+      "rotation_policy": "平台 OpenSSH verifier 身份或系统收据变化时重新取证并生成新 manifest digest",
+      "cli_source_types": ["system-signed", "package-receipt"]
+    },
+    {
+      "schema_version": 1,
+      "tool_id": "workbuddy",
+      "platform": "macos",
+      "kind": "app",
+      "official_url": "https://www.workbuddy.ai/",
+      "source_as_of": "2026-08-07",
+      "rotation_policy": "从当前官方安装介质重新核验 bundle、TeamIdentifier 与 designated requirement",
+      "app_identity": {
+        "bundle_id": "com.workbuddy.workbuddy",
+        "executable_name": "Electron",
+        "team_identifier": "FN2V63AD2J",
+        "designated_requirement": "identifier com.workbuddy.workbuddy and anchor apple generic and certificate leaf subject.OU = FN2V63AD2J"
+      }
+    },
+    {
+      "schema_version": 1,
+      "tool_id": "obsidian",
+      "platform": "macos",
+      "kind": "app",
+      "official_url": "https://obsidian.md/",
+      "source_as_of": "2026-08-07",
+      "rotation_policy": "从当前官方安装介质重新核验 bundle、TeamIdentifier 与 designated requirement",
+      "app_identity": {
+        "bundle_id": "md.obsidian",
+        "executable_name": "Obsidian",
+        "team_identifier": "6JSW4SJWN9",
+        "designated_requirement": "identifier md.obsidian and anchor apple generic and certificate leaf subject.OU = 6JSW4SJWN9"
+      }
+    }
+  ],
+  "manifest_digest": "96a3b4fc088bb3a3d5ee4e812e84eb6a756e5aa46626e15c28c4d139193fce2c"
+}
