@@ -1,10 +1,14 @@
-# TwinMind：个人第二大脑 Starter Kit 与初始化 Skill
+# TwinMind：本地优先的个人第二大脑 Starter Kit
 
-TwinMind 提供一份可直接使用的个人第二大脑 Demo，以及一个基于 Demo 引导用户完成工具准备、Vault 初始化、个性化、Git 基线和验证的 Codex Skill。项目对应文章[《个人第二大脑搭建指南：5万字讲透架构、AI协作与进化》](https://mp.weixin.qq.com/s/8Gq9vFm44EFm_7nBW7znAA)。
+TwinMind 把“搭建个人第二大脑”拆成两部分：一份可以直接复制的 Vault 示例，以及一个负责检查、规划、授权、初始化和验证的 Codex Skill。它适合希望先从可控的文件夹和 Markdown 开始，再逐步建立个人知识工作流的人。
+
+- 想先看结构：直接浏览 [`我的第二大脑/`](我的第二大脑/)。
+- 想自动初始化或验证：安装并使用 [`bootstrap-second-brain`](skills/bootstrap-second-brain/)。
+- 想了解设计取舍：阅读文章[《个人第二大脑搭建指南：5万字讲透架构、AI协作与进化》](https://mp.weixin.qq.com/s/8Gq9vFm44EFm_7nBW7znAA)。
 
 本项目采用 [MIT License](LICENSE) 开源发布。
 
-## 包含内容
+## 你将得到什么
 
 - 八区目录：`00 / 10 / 20 / 30 / 40 / 50 / 90 / 99`，每区自带一份用途 README
 - 六个根控制文件：`AGENTS.md`、`AI协作协议.md`、`加载清单.md`、`知识库索引.md`、`维护日志.md`、`.gitignore`
@@ -13,13 +17,24 @@ TwinMind 提供一份可直接使用的个人第二大脑 Demo，以及一个基
 - 一份建设与运行指南：四阶段路线、日/周/月/季度任务、知识与能力进化门禁
 - 五份校准后的配套参考：字段状态、七天/三十天清单、完整工具清单、工具升级门禁、反熵检查
 
+## 从哪里开始
+
+| 目标 | 推荐入口 | 写入范围 |
+| --- | --- | --- |
+| 新建一个第二大脑 | `bootstrap-second-brain` 的 `create` | 仅写入你批准的 Vault 路径 |
+| 检查已有 TwinMind Vault | `verify` | 零写入，生成外部私有报告 |
+| 盘点其他非空 Vault | `adopt-existing` | 只读 inventory，不合并资料 |
+| 继续已有初始化 | `resume` | 仅执行当前 run 中再次批准的操作 |
+
+如果你只想手工体验，复制 [`我的第二大脑/`](我的第二大脑/) 即可；仍建议完成工具检查、Git 初始化、首次 baseline commit、差异审查和恢复演练。
+
 ## 五份原附录的取舍
 
-- **A 目录与字段**：原目录已过时，不原样复制；保留校准后的 [[我的第二大脑/90_模板/字段与状态速查]]；
-- **B 七天与三十天**：纳入 [[我的第二大脑/99_维护记录/七天冷启动与三十天验收清单]]；
-- **C Memory OS 命令**：不纳入假设命令，Demo 没有 `tools/memory.py`；有效概念已进入 [[我的第二大脑/99_维护记录/定时任务与知识进化]]；
-- **D 工具技术栈**：移除易过期价格、版本、固定时间和错误字段口径；完整目录纳入 [[我的第二大脑/30_知识主题/第二大脑完整工具清单]]，升级判断纳入 [[我的第二大脑/30_知识主题/工具选择与升级门禁]]；
-- **E 失败与反熵**：修正旧路径和硬阈值，纳入 [[我的第二大脑/99_维护记录/每月检查与季度反熵清单]]。
+- **A 目录与字段**：原目录已过时，不原样复制；保留校准后的 [字段与状态速查](我的第二大脑/90_模板/字段与状态速查.md)；
+- **B 七天与三十天**：纳入 [七天冷启动与三十天验收清单](我的第二大脑/99_维护记录/七天冷启动与三十天验收清单.md)；
+- **C Memory OS 命令**：不纳入假设命令，Demo 没有 `tools/memory.py`；有效概念已进入 [定时任务与知识进化](我的第二大脑/99_维护记录/定时任务与知识进化.md)；
+- **D 工具技术栈**：移除易过期价格、版本、固定时间和错误字段口径；完整目录纳入 [第二大脑完整工具清单](我的第二大脑/30_知识主题/第二大脑完整工具清单.md)，升级判断纳入 [工具选择与升级门禁](我的第二大脑/30_知识主题/工具选择与升级门禁.md)；
+- **E 失败与反熵**：修正旧路径和硬阈值，纳入 [每月检查与季度反熵清单](我的第二大脑/99_维护记录/每月检查与季度反熵清单.md)。
 
 ## 使用初始化 Skill
 
@@ -66,10 +81,6 @@ rsync -a --delete skills/bootstrap-second-brain/ "$skill_target/"
 
 每个写入阶段都需要独立计划与授权。Skill 不会静默安装软件、覆盖旧库、创建远程仓库、push、批量安装插件或修改全局 Git 配置。
 
-## 手工启动
-
-如果暂不使用 Skill，也可以复制 `我的第二大脑/` 作为初始 Vault，但仍应完成工具检查、Git 初始化、首次 baseline commit、差异审查和恢复演练。
-
 ## 维护者验证
 
 ```bash
@@ -88,18 +99,6 @@ python3 skills/bootstrap-second-brain/scripts/package_skill.py --write
 - 正式源码发布：先提交全部授权变更并确认 staged、unstaged、untracked 均为空，再冻结 `release_commit`。将该 commit 推送到 canonical GitHub 分支，核验远端 SHA 与 `release_commit` 一致，并确认该远端 commit 包含 `LICENSE`、`README.md` 和 `skills/bootstrap-second-brain/SOURCE.md`，才视为发布成功。
 - 独立 ZIP 分发：SHA-256 只证明字节一致；未通过 `--verify-release` 的 ZIP 不得跨机器分发或安装。验证使用 bundle/attestation 双签名、独立渠道 Owner 公钥指纹和可信 OpenSSH verifier。
 - 发布成功不等于真实用户成效已验证；`initialized`、`activated`、pilot 和 proven 仍按各自证据门禁判断。
-
-## 15 分钟启动摘要
-
-推荐使用 `skills/bootstrap-second-brain/` 中的 Codex Skill：
-
-1. 先完成可信 Python 3.11+、Git、WorkBuddy 和 Obsidian 的工具准备；Git 是 create 硬门禁，WorkBuddy 与 Obsidian 可以明确暂缓；
-2. 让 Skill 只读探测目标，并审阅带摘要的 scaffold plan；
-3. 批准明确 operation 后生成 Starter，再完成最小访谈和独立 personalize plan；
-4. 建立只包含批准 Vault 路径的 Git baseline commit；
-5. 运行 verify，并用一个真实问题跑通来源 → 知识 → 项目/决策 → 交付 → 结果回写。
-
-也可以继续手工复制“我的第二大脑”，但不能跳过 Git 初始化、差异审查和恢复演练。
 
 ## Skill 支持边界
 
