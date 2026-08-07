@@ -1,6 +1,6 @@
 # Source 与分发边界
 
-- starter_source_commit: `82cdef9af2ed1064657be9b59447ecd2336b8153`
+- starter_source_commit: `295d51e4dba077bc19208e461a2fcff462d37253`
 - starter_digest: `5cd46ec97c0f3f1a2fada5beb983f013fcf4a0878d722e055539c1905bdde903`
 - distribution_boundary: `public-github-mit`
 - license_status: `MIT`
