@@ -27,6 +27,15 @@ TOOLING_ADAPTERS = {
     "30_知识主题/工具选择与升级门禁.md",
 }
 EXCLUDED_SOURCE_PATHS = {"AGENTS.md"}
+TASK_DEFINITION_PATHS = {
+    "60_任务系统/10_任务定义/每日任务规划.md",
+    "60_任务系统/10_任务定义/每日总结.md",
+    "60_任务系统/10_任务定义/每日思考.md",
+    "60_任务系统/10_任务定义/每日进化.md",
+    "60_任务系统/10_任务定义/每周知识蒸馏.md",
+    "60_任务系统/10_任务定义/每月健康检查.md",
+    "60_任务系统/10_任务定义/每季度反熵审查.md",
+}
 EXPECTED_POLICY_LIMITS = {
     "entries": 50_000,
     "depth": 64,
@@ -108,6 +117,99 @@ class CanonicalAssetContractTests(unittest.TestCase):
         )
         self.assertIn("https://www.workbuddy.ai/", text)
         self.assertNotIn("https://workbuddy.ai", text)
+
+    def test_task_system_defaults_to_safe_unassigned_drafts(self) -> None:
+        registry = (SOURCE_ROOT / "60_任务系统/00_任务注册表.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(
+            registry.count("| scheduled | draft |"), len(TASK_DEFINITION_PATHS)
+        )
+        task_ids = set()
+        for relative_path in TASK_DEFINITION_PATHS:
+            with self.subTest(path=relative_path):
+                text = (SOURCE_ROOT / relative_path).read_text(encoding="utf-8")
+                self.assertRegex(text, r"(?m)^type: task$")
+                task_id = re.search(r"(?m)^task_id: ([a-z0-9-]+)$", text)
+                self.assertIsNotNone(task_id)
+                task_ids.add(task_id.group(1))
+                self.assertRegex(text, r"(?m)^status: draft$")
+                self.assertRegex(text, r"(?m)^scheduler_owner: unassigned$")
+                self.assertRegex(text, r"(?m)^timezone: unassigned$")
+                for heading in (
+                    "## 目标",
+                    "## 触发与事实源",
+                    "## 输入与排除",
+                    "## 执行指令",
+                    "## 输出",
+                    "## 权限与人工门禁",
+                    "## 失败、停止与验证",
+                ):
+                    self.assertIn(heading, text)
+                self.assertNotIn("/Users/", text)
+                self.assertNotIn("open_id", text)
+                self.assertNotIn("chat_id", text)
+        self.assertEqual(len(task_ids), len(TASK_DEFINITION_PATHS))
+        for task_id in task_ids:
+            self.assertEqual(registry.count(f"`{task_id}`"), 1)
+
+    def test_methodology_keeps_structure_logic_and_operation_separate(self) -> None:
+        text = (SOURCE_ROOT / "30_知识主题/第二大脑建设与运行方法论.md").read_text(
+            encoding="utf-8"
+        )
+        for anchor in (
+            "五项成功条件",
+            "物理结构",
+            "逻辑模型",
+            "运行机制",
+            "真实问题 → 来源与证据 → Candidate",
+            "维护成本",
+            "也可以为零",
+        ):
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, text)
+        self.assertRegex(text, r"(?m)^status: pilot$")
+        self.assertNotIn("/Users/", text)
+
+    def test_canonical_wikilinks_resolve_without_ambiguity(self) -> None:
+        wikilink = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|[^\]]+)?\]\]")
+        markdown_files = sorted(
+            path
+            for path in SOURCE_ROOT.rglob("*.md")
+            if path.relative_to(SOURCE_ROOT).as_posix() not in EXCLUDED_SOURCE_PATHS
+        )
+        for source in markdown_files:
+            for raw_target in wikilink.findall(source.read_text(encoding="utf-8")):
+                target = raw_target.strip()
+                self.assertFalse(
+                    Path(target).is_absolute()
+                    or re.match(r"^[A-Za-z]:[\\/]", target)
+                    or target.startswith("\\\\"),
+                    f"Wiki 链接不得使用绝对路径：{target}",
+                )
+                self.assertNotIn("..", Path(target).parts, f"Wiki 链接不得越出 Vault：{target}")
+                direct = SOURCE_ROOT / target
+                candidates = []
+                for candidate in (
+                    direct,
+                    direct.with_suffix(".md") if not direct.suffix else direct,
+                    direct / "README.md",
+                ):
+                    if candidate.is_file() and candidate not in candidates:
+                        candidates.append(candidate)
+                if not candidates and "/" not in target:
+                    local = source.parent / f"{target}.md"
+                    candidates = [local] if local.is_file() else list(
+                        SOURCE_ROOT.rglob(f"{target}.md")
+                    )
+                with self.subTest(
+                    source=source.relative_to(SOURCE_ROOT).as_posix(), target=target
+                ):
+                    self.assertEqual(
+                        len(candidates),
+                        1,
+                        f"Wiki 链接必须唯一解析：{target} -> {candidates}",
+                    )
 
     def test_starter_manifest_declares_every_safe_canonical_file(self) -> None:
         manifest = json.loads(STARTER_MANIFEST.read_text(encoding="utf-8"))

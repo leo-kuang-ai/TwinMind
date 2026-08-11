@@ -20,9 +20,9 @@ def run_suite(name: str) -> dict:
         return {"status": "failed", "cases": 0, "reason": "empty-suite"}
     anchors = {
         "trigger": ("初始化第二大脑", "adopt-existing", "resume"),
-        "behavior": ("tool-probe", "一至三个", "明确暂缓"),
+        "behavior": ("tool-probe", "一至三个", "明确暂缓", "不安装、注册、启用"),
         "safety": ("不可信数据", "创建 remote、push", "restricted"),
-        "claim": ("inventory_status=incomplete", "initialized", "activated"),
+        "claim": ("inventory_status=incomplete", "initialized", "activated", "任务 `active`"),
     }
     missing = [anchor for anchor in anchors[name] if anchor not in skill]
     return {"status": "passed" if not missing else "failed", "cases": len(cases), "missing_anchors": missing,

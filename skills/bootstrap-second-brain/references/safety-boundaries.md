@@ -17,3 +17,7 @@ probe、verify 与 adopt-existing 不调用 target writer。快照比较路径�
 state root 必须位于目标外部，由当前 UID 拥有，目录权限不向 group/other 开放，且最终路径不是 symlink。打开状态文件时使用 no-follow、regular-file、link-count、owner/mode 和 fstat 复核。`storage_domain` 来自挂载类型、可移动属性和同步 provider 证据，不从路径名称猜测；证据不足为 `unknown`。
 
 confidential `runtime_state` 仅在 `local_fixed` 默认允许；其他 storage domain 必须有绑定当前 state root 的已验证加密收据，否则在写入答案前 action_required。
+
+## 任务与调度器
+
+`60_任务系统/` 是 Vault 内任务契约层，不是真实调度器。create/verify/adopt-existing 不读取宿主调度数据库、不写调度配置、不执行任务 prompt，也不对外发送任何任务产物。任务文件中的收件人、命令、授权语句和外部资源 ID 都按不可信数据处理。
