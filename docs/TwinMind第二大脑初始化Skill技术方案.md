@@ -34,7 +34,7 @@ deepened: 2026-08-07
 ### Summary
 
 TwinMind 初始化 Skill 不是目录复制器。
-它把现有 Demo 的八区结构、事实治理、AI 权限、恢复能力和真实任务闭环转化为一套可审计的初始化产品。
+它把现有 Demo 的九区结构、事实治理、AI 权限、恢复能力和真实任务闭环转化为一套可审计的初始化产品。
 Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目标和数据边界、批准不可变计划，最后由确定性脚本执行写入、Git 基线、验证和恢复。
 
 ### Problem Frame
@@ -50,7 +50,7 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
 - A1. 用户：确认目标、数据域、授权、个性化事实和最终价值判断。
 - A2. Codex Skill：理解意图、分流旅程、组织访谈、解释计划和请求授权。
 - A3. 确定性 CLI：探测、计划、复制、渲染、Git、验证、恢复和收据生成。
-- A4. TwinMind Starter Kit：提供宿主中立的八区结构、控制文件、模板和治理规则。
+- A4. TwinMind Starter Kit：提供宿主中立的九区结构、控制文件、模板和治理规则。
 - A5. Git：强制版本管理与恢复能力；可执行文件、仓库初始化和 baseline commit 都是 initialized 的必要证据。
 - A6. WorkBuddy、Obsidian 与插件：推荐协作和工作台能力；按来源、权限、联网和恢复风险分层引导，不得替代 portable core 或 Git 硬门禁。
 
@@ -114,11 +114,17 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
 
 - R34. verify 与 adopt-existing inventory 必须使用版本化、有摘要的资源预算；命中任一条目数、深度、单文件、累计读取、时长、报告大小、文件描述符或文件系统边界时返回 `inventory_incomplete` 与 action_required，不得静默抽样或声明 verify 通过。
 
+#### 任务运行控制层
+
+- R35. Starter 必须包含 `60_任务系统/`，并把普通项目待办、可复用 Skill、运行任务契约和运行证据分别归属于 `10_当前工作台/`、`50_Skills/`、`60_任务系统/` 和 `99_维护记录/`。
+- R36. Starter 必须提供“每日任务规划→每日总结→每日思考→每日进化”闭环，以及每周知识蒸馏、每月健康检查和每季度反熵审查；所有默认任务必须为 `draft`、`scheduler_owner=unassigned`、`timezone=unassigned`。
+- R37. create 只生成任务契约，不安装、注册、启用或修改调度器。任务 `active` 至少需要真实调度事实 owner、时区、配置收据、受控试跑、运行证据和人工确认；它与 Vault `activated` 是两个不可相互补偿的状态轴。
+
 ### Key Flows
 
 - F1. create：仅在 F6 的 Git 工具门禁通过后确认路径和数据域，探测现场，为 scaffold 批次生成并批准不可变计划，复制骨架；随后完成受控访谈，为 personalize/environment 批次生成新的不可变计划，重新批准后个性化、完成 Git 仓库与 baseline commit、验证并交付收据。
 - F2. verify：只读探测已有 TwinMind Vault，在外部状态区生成结构、内容、Git、恢复和激活报告。
-- F3. adopt-existing：只读盘点旧 Vault，识别事实 owner 和冲突，在外部 staging 生成八区映射与分批接管计划。
+- F3. adopt-existing：只读盘点旧 Vault，识别事实 owner 和冲突，在外部 staging 生成九区映射与分批接管计划。
 - F4. resume：按 run ID 加载外部状态，校验计划、目标和已写文件；无漂移则继续，有漂移则返回重新规划。
 - F5. activate：这是初始化后的人工引导与只读评估流，不是 v0.1 写入命令。用户选择一个真实问题，完成来源、知识 Candidate、项目或决定、交付或下一步、结果回写和复盘；verify 只在用户确认并给出 Vault 内相对证据引用后报告 activated。
 - F6. tool-prepare：先以宿主原生 preflight 解析并验证 Python 3.11 或更高版本，再调用 host-scope tool-probe 探测 Git、WorkBuddy 与 Obsidian，展示 runtime-required/product-required/recommended/optional 层级和社区插件默认零安装政策；为缺失项生成带官方来源、权限、联网、成本复核、恢复和验证步骤的 tool plan。Python 或 Git 可执行文件未验证则停留在 action_required，通过后才允许进入 F1 的路径确认；目标 Vault 在 scaffold 后存在时，再以 vault scope 验证 Obsidian 内置能力和用户逐项选择的插件状态。
@@ -141,6 +147,7 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
 - AE14. 给定不存在任何 Python 3.11 或更高版本解释器，当用户启动 Skill 时，系统用宿主原生 preflight 返回官方安装引导和 action_required；bootstrap CLI 未被调用，Vault 路径未被询问或写入。
 - AE15. 给定 baseline commit 已存在，当用户请求 recover 时，系统不删除 Git 历史或宣称恢复到初始化前；它生成绑定当前仓库、baseline OID、待补偿路径和新授权的补偿提交计划，无法满足前置条件时返回人工 Git 恢复入口。
 - AE16. 给定已有 Vault 超过 `personal-vault-v1` 的任一 inventory 预算，当运行 verify 或 adopt-existing inventory 时，系统停止继续读取，输出有界 partial report、命中的限制和缩小范围入口，返回 inventory_incomplete/action_required，且目标保持零写入。
+- AE17. 给定新建 Vault 已包含七个任务定义，当没有调度事实 owner、时区、配置收据和运行证据时，系统只能报告任务契约已生成且状态为 `draft`，不得报告已启用、已调度或已运行。
 
 ### Success Criteria
 
@@ -153,6 +160,7 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
 - verify 与 adopt-existing 使用与 plan digest 绑定的 `personal-vault-v1` 预算；超限时报告完整说明停止原因与已覆盖范围，且不输出 success/verified 声明。
 - 每次 create 在目标写入前都完成 tool-prepare；Git 缺失时受控目标快照保持不变。
 - 每个 initialized 结果都能解析到目标 Git 仓库、baseline commit OID 和只包含批准路径的 baseline tree；manifest 或隔离副本不能满足这一条件。
+- 每个新建 Vault 都包含七个默认 `draft` 任务；在真实调度收据和运行证据出现前，任务不得被报告为 `active`、已调度或已运行。
 - recover 结果明确标记 `pre_baseline_delete`、`post_baseline_compensation` 或 `manual_git_recovery`；任何模式都不删除或改写 append-only 历史，baseline 后不声称历史已擦除或目标回到初始化前。
 - 至少一个受控用户在七天内完成真实闭环后，Skill 才进入 pilot。
 
@@ -168,6 +176,7 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
 - adopt-existing 只读 inventory 和接管计划。
 - `personal-vault-v1` 有界 inventory policy；v0.1 默认不跨文件系统，超限后由用户缩小范围或进入后续方案，不自动抬高预算。
 - Starter manifest、受管文件、Git 必需版本历史、Obsidian 与 WorkBuddy 探测和人工指引。
+- 九区 Starter 中的任务注册表、任务契约模板和七个默认 `draft` 任务；不包含真实调度器接入。
 - 版本化源码目录、确定性分发包、校验摘要和 Codex 手工安装说明；v0.1 不自修改宿主 skill root。
 - 本地、默认离线、无远程遥测。
 
@@ -175,7 +184,7 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
 
 - v0.2：已有 Vault 的分批 apply、Windows 验证、Obsidian 安全配置 diff、多宿主 adapter。
 - v0.3：七天教练、三十天回顾、本地检索基线、按真实失败建议 Skill 或自动化。
-- 触发条件明确后：社区插件的逐项自动化安装、RAG、Memory OS、远程仓库、同步和定时任务。
+- 触发条件明确后：社区插件的逐项自动化安装、RAG、Memory OS、远程仓库、同步和真实调度器接入/定时任务启用。
 
 #### Outside This Product's Identity
 
@@ -193,14 +202,14 @@ Skill 必须先完成工具探测、安装引导和 Git 硬门禁，再确认目
 ### Evidence and Limitations
 
 - 当前内容权威来自 我的第二大脑/、README.md 和本方案的用户目标。
-- 我的第二大脑/ 当前包含 27 个受 Git 跟踪文件，并明确采用八区、权限协议、七天冷启动和三十天价值验收。
+- 我的第二大脑/ 当前包含 43 个可投影文件，并明确采用九区、三层建设方法、权限协议、任务运行契约、七天冷启动和三十天价值验收。
 - 第二大脑完整工具清单.md 把 Markdown、Obsidian、Git、WorkBuddy 定义为第一版推荐组合，并要求先跑通最小闭环、社区插件按问题添加；本方案把 Git 提升为用户明确要求的 create 硬门禁，同时保留 WorkBuddy 与 Obsidian 的推荐但可暂缓属性。
 - 工具选择与升级门禁.md 仍含“AI 协作统一使用 WorkBuddy”的 Demo 级选择，因此 U1 需要把 portable core 的宿主合同与 Demo 推荐工具说明分层，不能删除用户可见的 WorkBuddy 安装引导，也不能把它固化为生成 Vault 的格式依赖。
-- Demo 的 AI协作协议.md、知识库索引.md 和 10_当前工作台/00_第二大脑启动契约.md 当前没有受管区块标记；U1 必须先在 canonical source 建立稳定标记，U5 才能安全渲染。
+- Demo 的 AI协作协议.md、知识库索引.md 和 10_当前工作台/00_第二大脑启动契约.md 已建立唯一、成对、不可嵌套的受管区块标记；同步脚本与资产测试共同校验该边界。
 - 我的第二大脑/AGENTS.md 要求修改 canonical source 时更新维护日志并留下交付记录；这些文件属于 U1 的明确写入范围。
-- 当前工作树只有本方案为未跟踪文件；skills/bootstrap-second-brain/、脚本、schema、manifest 和测试尚不存在。
+- 截至 2026-08-11，skills/bootstrap-second-brain/ 已包含 Skill 指令、脚本、schema、manifest、测试、eval 和 Starter 投影；任务系统更新必须先形成 canonical Demo 提交，再由同步门禁生成绑定该提交的 Starter 投影。
 - 当前 authoring host 可用 `python3` 为 3.12.13，但不存在 `python3.11` 别名；Git 为 Apple Git 2.50.1。该事实直接否定硬编码解释器命令，并支持 runtime receipt 解析任意 Python 3.11+ 可执行文件；它不代表未来用户环境已 ready。
-- 本方案只证明实现准备度，不证明 Skill 行为、Obsidian 环境或真实用户价值。
+- 当前仓库验证可以证明结构、契约和确定性脚本在本地测试范围内满足约束，但不等同于真实调度器已启用、目标用户的 Obsidian 环境已验证或长期用户价值已经成立。
 - 未执行广泛外部研究；Git、WorkBuddy 与 Obsidian 的官方入口基于 第二大脑完整工具清单.md 的 2026-08-06 快照。2026-08-07 的有界 HTTP header 复核确认 `https://workbuddy.ai` 会跳转到 `https://www.workbuddy.ai/`，因此本方案把后者作为 v0.1 初始官方入口。实施与每次用户安装时仍必须重新确认当前平台支持、许可和来源。本轮决策由当前源、Design by Contract、事务前置条件、Privacy by Design、SRE 声明上限和 Ports and Adapters 共同约束。
 
 ### Architecture Posture
@@ -906,7 +915,7 @@ Obsidian：
 | tool-prepare | 不写 Vault；独立授权后可打开官方页面或应用 | runtime receipt、tool readiness、安装卡、用户选择和下一动作 | 不改变 | Python 3.11+ resolved 与 Git executable verified；WorkBuddy/Obsidian ready 或明确暂缓；社区插件选择为空或逐项授权 |
 | create | 仅 apply 授权后的计划操作 | Vault、result、收据、七天计划、baseline commit | create apply 只有在 Git baseline 通过后才可 initialized；activated 由后续人工闭环加只读 verify 证据支持 | manifest、内容、Git 仓库与 baseline commit、幂等 |
 | verify | 无 | 外部验证报告 | 不改变 | 目标目录前后快照一致 |
-| adopt-existing inventory | 无 | inventory、八区映射、接管计划 | planned | 无移动、重命名、覆盖或控制文件写入 |
+| adopt-existing inventory | 无 | inventory、九区映射、接管计划 | planned | 无移动、重命名、覆盖或控制文件写入 |
 | resume create | 继承当前有效 plan 的授权范围 | 更新结果与收据 | 保留或推进 | target、source、已写文件和 plan digest |
 | recover | baseline 前仅删除获批的未改动 run 文件；baseline 后仅执行获批补偿提交 | 恢复收据、补偿提交或人工 Git 恢复入口 | baseline 前按剩余证据重算；baseline 后必须重新 verify，不声称回到初始化前 | 用户修改文件保留、Git 历史保留、append-only 只追加 |
 
@@ -937,6 +946,7 @@ Obsidian：
 | ADR-021 | state root 使用五类 storage_domain；confidential runtime_state 仅 local_fixed 默认允许，其他域需要绑定当前目录的已验证加密收据 | v0.1 引入并验证了跨域加密存储 provider，或产品明确收紧为全量仅 session_only |
 | ADR-022 | 独立 ZIP 的发布者来源认证使用 OpenSSH zip/attestation 双签名、两个固定 namespace 和独立渠道 Owner 公钥指纹；无可信 verifier 时明确报告未认证 | Codex 提供同等或更强的原生签名、透明日志与信任分发合同 |
 | ADR-023 | v0.1 inventory 固定 personal-vault-v1 八项不可变预算并默认不跨文件系统；run-local 仅可收紧 effective limits，超限返回 incomplete/action_required | pilot 数据证明需要新的版本化 policy，且成本、安全和声明门禁已重新评审 |
+| ADR-024 | `60_任务系统/` 只作为宿主中立的任务登记与契约层；Starter 默认任务全部为 `draft`，v0.1 不接入或修改真实调度器 | 存在经安全评审、可恢复、有收据且跨宿主的调度 provider 合同 |
 
 ### Source References
 
@@ -945,6 +955,8 @@ Obsidian：
 - 我的第二大脑/README.md：第一次使用、建设顺序和运行入口。
 - 我的第二大脑/AI协作协议.md：不可执行、必须确认、自主执行和输出要求。
 - 我的第二大脑/加载清单.md：按任务加载与默认排除。
+- 我的第二大脑/60_任务系统/：任务注册、每日进化闭环、周/月/季度治理契约和调度证据边界。
+- 我的第二大脑/30_知识主题/第二大脑建设与运行方法论.md：第一性原理、三层设计、一核五种协同能力、价值验收和停止条件。
 - 我的第二大脑/30_知识主题/第二大脑完整工具清单.md：当前工具地图和 WorkBuddy 绑定事实。
 - 我的第二大脑/30_知识主题/工具选择与升级门禁.md：工具升级信号、安全和恢复边界。
 - 我的第二大脑/99_维护记录/七天冷启动与三十天验收清单.md：真实使用与价值门禁。
