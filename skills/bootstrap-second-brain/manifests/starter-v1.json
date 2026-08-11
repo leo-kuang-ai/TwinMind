@@ -3,8 +3,8 @@
   "starter_version": "0.1.0",
   "source": {
     "root": "我的第二大脑",
-    "commit": "295d51e4dba077bc19208e461a2fcff462d37253",
-    "tree_digest": "5cd46ec97c0f3f1a2fada5beb983f013fcf4a0878d722e055539c1905bdde903"
+    "commit": "fdc58d13dc6217c5202ba3e8e7e8e95db4093311",
+    "tree_digest": "70726fc984a26db84b606537df07ed2265f18a11d98a0a083d5e23aa2a25c3fa"
   },
   "projection": {
     "root": "assets/starter-kit",
@@ -73,7 +73,19 @@
       "path": "30_知识主题/README.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "55137c007e5c5d0c94396782affd2db7c30195cd36370c55687745d6c49ff75e"
+      "sha256": "587709775ad31a611c3b1bdd3922b0fe5777011acb2c4159222476ace82c2860"
+    },
+    {
+      "path": "30_知识主题/七阶学习闭环.md",
+      "ownership": "static",
+      "layer": "portable-core",
+      "sha256": "62d2f2a8369142c693fd5182254a76643e7185ee87582fb58910a980855d8912"
+    },
+    {
+      "path": "30_知识主题/从可信记忆到决策学习系统.md",
+      "ownership": "static",
+      "layer": "portable-core",
+      "sha256": "65a9fb9e2a59210003d5f7531f26fe33013471741c5e5280acd7c9bae3787711"
     },
     {
       "path": "30_知识主题/工具选择与升级门禁.md",
@@ -103,7 +115,7 @@
       "path": "90_模板/README.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "c625f5fac50bf372d11cf87c18bc8f47c3632903216504d8745bd97e8c39552e"
+      "sha256": "40f12859a0f1cb121f1c9599be74ca30f99687319115ca55173a4318bb1a0fc6"
     },
     {
       "path": "90_模板/交付复盘模板.md",
@@ -142,6 +154,12 @@
       "sha256": "1b76cf6fec0383653de9881d76b5ac5f5122bd4d7ae26fb9cd4e69702db98c15"
     },
     {
+      "path": "90_模板/高价值知识学习与回放模板.md",
+      "ownership": "static",
+      "layer": "portable-core",
+      "sha256": "c3aed484a01124eea2f9cbc83c6ea4637ce82a05adc2ae1e8f7ca81a98e3437c"
+    },
+    {
       "path": "99_维护记录/README.md",
       "ownership": "static",
       "layer": "portable-core",
@@ -169,7 +187,7 @@
       "path": "99_维护记录/定时任务与知识进化.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "41ddd3854fee2cfafc53817aeb9b2c497eb9821548fc76ab7615578190acac0f"
+      "sha256": "a158ae2a42a2a54867e3ad4577e9639a769e9c66910a5e81b9202c4af124ed4a"
     },
     {
       "path": "99_维护记录/每月检查与季度反熵清单.md",
@@ -193,7 +211,7 @@
       "path": "README.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "4d1a2f59c863b0b02988511b98a9ee13bd94b74d9a6eddd874ead4cb099fc77f"
+      "sha256": "be91a96afaf473df72e89b10d464a6ab109c1732b1d28e064cb3cccfb12b5907"
     },
     {
       "path": "加载清单.md",
@@ -205,13 +223,13 @@
       "path": "知识库索引.md",
       "ownership": "managed-block",
       "layer": "portable-core",
-      "sha256": "b2d6aad84066c185869bee3c366392c41035aaac90d525a22c3b079a0ae7480e"
+      "sha256": "735ddefd798c3607b8f55d72f83be2d1888a727e17084c070a78add95b0e9722"
     },
     {
       "path": "维护日志.md",
       "ownership": "append-only",
       "layer": "portable-core",
-      "sha256": "9fda8a8c6b61ef08dae1529446f955bbff3bba002796904d219d56b87139b2e2"
+      "sha256": "57c7d8f4c5ae7090caad8a7327249d81c1e3ef76331162da69b030c2b9b7f8c9"
     }
   ]
 }
