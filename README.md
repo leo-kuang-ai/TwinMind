@@ -102,7 +102,7 @@ rsync -a --delete skills/bootstrap-second-brain/ "$skill_target/"
 
 ## 已初始化的库如何升级
 
-已经用旧版 TwinMind 初始化过的 Vault，按"对照吸收"方式获得新内容，全程无自动迁移。对照入口：`CHANGELOG.md` 当前批次条目 + Demo `维护日志.md` 的 0.2.0 收口条目（列明了本批新增文件）；`知识库索引.md` 的 Starter 版本行可确认你差哪一版：
+已经用旧版 TwinMind 初始化过的 Vault，按"对照吸收"方式获得新内容，全程无自动迁移。对照入口：`CHANGELOG.md` 当前批次条目、Skill 包内 `manifests/starter-v1.json` 的 files 清单（新版全量文件表），以及 Demo `维护日志.md` 的收口条目；`知识库索引.md` 的 Starter 版本行可确认你差哪一版：
 
 | 类别 | 处理方式 |
 | --- | --- |

@@ -3,8 +3,8 @@
   "starter_version": "0.2.0",
   "source": {
     "root": "我的第二大脑",
-    "commit": "970439bfe104d870ccd93d12be93ba53e92ffc43",
-    "tree_digest": "c2a72ce3d8ec22e937966d11bb6efc7d64d70f0bbfceec0fe0dfe8e47c01b664"
+    "commit": "12898d930211fbdf358ccc60de78cce6b893a68c",
+    "tree_digest": "993a10aa9c28dba2d785ea9ada0248b77d8af12996c4d818502116477ee6cf3a"
   },
   "projection": {
     "root": "assets/starter-kit",
@@ -207,7 +207,7 @@
       "path": "90_模板/任务契约模板.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "2b9f2675c9c7302989a148ba22ac577487d1595b7e9ade02a7bc3ffce23d4dda"
+      "sha256": "c70da3c0ee4ed38684f7b73f6e482d2c32f7059a00ba03d7322a8d70decc9329"
     },
     {
       "path": "90_模板/决策模板.md",
@@ -225,7 +225,7 @@
       "path": "90_模板/字段与状态速查.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "88e87e78f82e923ec7396f346e8556cc0afa143c2fcfb078af3237612fa27c67"
+      "sha256": "6334348b4c557d157104ac73139f432e576abfc408103400ba19a7902c38d8a9"
     },
     {
       "path": "90_模板/来源模板.md",

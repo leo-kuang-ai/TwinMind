@@ -343,5 +343,18 @@ class SyncScriptBehaviorTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+class StarterVersionLiteralTests(unittest.TestCase):
+    """第 18 轮：版本字面量漂移守卫——升版时文档口径必须同步。"""
+
+    def test_starter_version_literal_present_in_user_facing_docs(self) -> None:
+        import re
+        script = ROOT / "skills" / "bootstrap-second-brain" / "scripts" / "sync_starter_assets.py"
+        match = re.search(r'STARTER_VERSION = "([0-9.]+)"', script.read_text(encoding="utf-8"))
+        self.assertIsNotNone(match)
+        version = match.group(1)
+        index_page = (ROOT / "我的第二大脑" / "知识库索引.md").read_text(encoding="utf-8")
+        self.assertIn(version, index_page, "知识库索引 Starter 版本行未随 STARTER_VERSION 同步")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn(version, readme, "README 版本口径未随 STARTER_VERSION 同步")
 if __name__ == "__main__":
     unittest.main()

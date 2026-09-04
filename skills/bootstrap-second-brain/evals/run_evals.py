@@ -11,7 +11,18 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import unicodedata
 from pathlib import Path
+
+
+def _norm(text: str) -> str:
+    """NFKC + casefold + 剥离零宽/格式字符，防同形字与零宽字符骗过子串守卫。"""
+    cleaned = "".join(ch for ch in text if unicodedata.category(ch) != "Cf")
+    return unicodedata.normalize("NFKC", cleaned).casefold()
+
+
+def _contains(haystack: str, needle: str) -> bool:
+    return _norm(needle) in _norm(haystack)
 
 
 EVAL_ROOT = Path(__file__).resolve().parent
@@ -78,7 +89,14 @@ def validate_yaml_registry() -> dict:
     if not registry_path.is_file():
         return {"status": "failed", "reason": "eval.yaml 缺失"}
     text = registry_path.read_text(encoding="utf-8")
-    file_entries = re.findall(r"^\s*-\s*(evals/cases/[\w.-]+\.yaml)\s*$", text, re.M)
+    file_entries: list[str] = []
+    try:
+        import yaml  # type: ignore[import-not-found]
+        registry = yaml.safe_load(text) or {}
+        file_entries = list((registry.get("cases") or {}).get("files") or [])
+        file_entries = [e for e in file_entries if isinstance(e, str) and e.startswith("evals/cases/") and e.endswith(".yaml")]
+    except ImportError:
+        file_entries = re.findall(r"^\s*-\s*(evals/cases/[\w.-]+\.yaml)\s*$", text, re.M)
     if not file_entries:
         return {"status": "failed", "reason": "eval.yaml 未注册任何 case 文件"}
     missing = [entry for entry in file_entries if not (EVAL_ROOT.parent / entry).is_file()]
@@ -100,12 +118,15 @@ def validate_yaml_registry() -> dict:
         judge = payload.get("judge")
         if not isinstance(judge, dict) or judge.get("type") != "rule_based":
             return {"status": "failed", "reason": f"{entry} judge 非 rule_based"}
-        prompt = payload.get("input", {}).get("prompt", "")
+        payload_input = payload.get("input")
+        prompt = payload_input.get("prompt") if isinstance(payload_input, dict) else None
+        if not isinstance(prompt, str) or not prompt.strip():
+            return {"status": "failed", "reason": f"{entry} input.prompt 必须是非空字符串"}
         must_not_contain = payload.get("expect", {}).get("must_not_contain", [])
         if not isinstance(must_not_contain, list) or not all(isinstance(w, str) for w in must_not_contain):
             return {"status": "failed", "reason": f"{entry} expect.must_not_contain 必须是字符串列表"}
         for word in must_not_contain:
-            if word in prompt:
+            if _contains(prompt, word):
                 return {"status": "failed", "reason": f"{entry} 的 must_not_contain 词 '{word}' 出现在题干中"}
         success_blocks = judge.get("success")
         if not isinstance(success_blocks, list) or not success_blocks:
@@ -121,11 +142,11 @@ def validate_yaml_registry() -> dict:
                     return {"status": "failed", "reason": f"{entry} 的 {key} 必须是非空字符串列表"}
             if not cond.get("any") and not cond.get("all"):
                 return {"status": "failed", "reason": f"{entry} 存在仅含 not 的空判定块"}
-            discriminators = [w for key in ("any", "all") for w in cond.get(key, []) if w not in prompt]
+            discriminators = [w for key in ("any", "all") for w in cond.get(key, []) if not _contains(prompt, w)]
             if not discriminators:
                 return {"status": "failed", "reason": f"{entry} 存在判定词全部是题干子串的回声块"}
             for word in cond.get("not", []):
-                if word in prompt:
+                if _contains(prompt, word):
                     return {"status": "failed", "reason": f"{entry} 的 not 词 '{word}' 出现在自身 prompt 中"}
     deep_check = "structure-validated"
     return {"status": "validated", "files": len(file_entries), "ids": len(ids), "deep_check": deep_check}

@@ -186,39 +186,40 @@ class ReviewDueContractTests(unittest.TestCase):
         link_root.symlink_to(self.vault, target_is_directory=True)
         self.assertEqual(self._run(str(link_root)).returncode, 2)
 
-    def test_scan_file_budget_enforced(self) -> None:
+    def _budget_case(self, attr: str, limited: object) -> None:
+        """预算中断语义：不抛异常，返回部分结果并携带 partial/budget_exceeded（R17）。"""
         module = _load_module()
         _write_page(self.vault, "one.md", ["review_at: 2020-01-01"])
-        _write_page(self.vault, "two.md", ["review_at: 2020-01-01"])
-        original = module.MAX_SCAN_FILES
-        module.MAX_SCAN_FILES = 1
+        _write_page(self.vault, "two.md", ["review_at: 2020-01-02"])
+        original = getattr(module, attr)
+        setattr(module, attr, limited)
         try:
-            with self.assertRaises(module.ScanBudgetError):
-                module.collect_due_pages(self.vault)
+            result = module.collect_due_pages(self.vault)
         finally:
-            module.MAX_SCAN_FILES = original
+            setattr(module, attr, original)
+        self.assertTrue(result["partial"])
+        self.assertTrue(result["budget_exceeded"])
+        self.assertGreaterEqual(result["scanned_files"], 1)
 
-    def test_read_bytes_budget_enforced(self) -> None:
-        module = _load_module()
-        _write_page(self.vault, "one.md", ["review_at: 2020-01-01"])
-        original = module.MAX_READ_BYTES
-        module.MAX_READ_BYTES = 1
-        try:
-            with self.assertRaises(module.ScanBudgetError):
-                module.collect_due_pages(self.vault)
-        finally:
-            module.MAX_READ_BYTES = original
+    def test_scan_file_budget_yields_partial_result(self) -> None:
+        self._budget_case("MAX_SCAN_FILES", 1)
 
-    def test_elapsed_budget_enforced(self) -> None:
+    def test_read_bytes_budget_yields_partial_result(self) -> None:
+        self._budget_case("MAX_READ_BYTES", 1)
+
+    def test_elapsed_budget_yields_partial_result(self) -> None:
+        self._budget_case("MAX_ELAPSED_SECONDS", -1.0)
+
+    def test_symlink_dir_pruned_is_counted(self) -> None:
+        target = self.vault / "real"
+        target.mkdir()
+        (target / "in.md").write_text("---\nreview_at: 2020-01-01\n---\n", encoding="utf-8")
+        (self.vault / "link").symlink_to(target, target_is_directory=True)
         module = _load_module()
-        _write_page(self.vault, "one.md", ["review_at: 2020-01-01"])
-        original = module.MAX_ELAPSED_SECONDS
-        module.MAX_ELAPSED_SECONDS = -1.0
-        try:
-            with self.assertRaises(module.ScanBudgetError):
-                module.collect_due_pages(self.vault)
-        finally:
-            module.MAX_ELAPSED_SECONDS = original
+        result = module.collect_due_pages(self.vault)
+        self.assertEqual(result["skipped_symlink_dirs"], 1)
+        self.assertEqual(result["scanned_files"], 1)
+        self.assertEqual([e["path"] for e in result["due"]], ["real/in.md"])
 
 
 class ReviewDueOutputDetailTests(unittest.TestCase):
