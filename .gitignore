@@ -27,3 +27,7 @@ skills/bootstrap-second-brain/evals/results/
 skills/bootstrap-second-brain/**/__pycache__/
 skills/bootstrap-second-brain/**/*.pyc
 skills/bootstrap-second-brain/**/*.sig
+# 宿主生成的运行时镜像（由 spec-first 工具管理，不入库）
+.agents/
+.codex/
+.kiro/
