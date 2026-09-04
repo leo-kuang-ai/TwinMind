@@ -1,7 +1,7 @@
 # Source 与分发边界
 
-- starter_source_commit: `16619432d5918f4d5e0a766edeaefeecab350dc8`
-- starter_digest: `53bfd1d643625f7ca8ca593b25736a2e88d2d1ce70a51855e175d222d21fea45`
+- starter_source_commit: `58836f306fd50c161328af666481b19bb9ad4768`
+- starter_digest: `86d318c8a8e42ead9d0b9d921950725852ea19eb52400df30af79a51734ea484`
 - distribution_boundary: `public-github-mit`
 - license_status: `MIT`
 - canonical_source: `skills/bootstrap-second-brain/`

@@ -24,7 +24,7 @@ ASSET_ROOT = SKILL_ROOT / "assets" / "starter-kit"
 STARTER_MANIFEST = SKILL_ROOT / "manifests" / "starter-v1.json"
 POLICY_MANIFEST = SKILL_ROOT / "manifests" / "inventory-policies-v1.json"
 
-STARTER_VERSION = "0.1.0"
+STARTER_VERSION = "0.2.0"
 MANIFEST_SCHEMA_VERSION = "starter-manifest-v1"
 POLICY_SCHEMA_VERSION = "inventory-policies-v1"
 POLICY_ID = "personal-vault-v1"

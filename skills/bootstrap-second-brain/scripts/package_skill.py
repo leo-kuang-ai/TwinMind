@@ -22,7 +22,7 @@ from typing import Any
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = SKILL_ROOT.parents[1]
 DIST_ROOT = REPO_ROOT / "dist"
-BUNDLE_NAME = "bootstrap-second-brain-v0.1.zip"
+BUNDLE_NAME = "bootstrap-second-brain-v0.2.zip"
 ROOT_NAME = "bootstrap-second-brain"
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 ALLOWED_ROOT_FILES = {"LICENSE", "SKILL.md", "SOURCE.md"}
