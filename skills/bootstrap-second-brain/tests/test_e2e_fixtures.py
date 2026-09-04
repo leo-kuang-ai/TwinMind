@@ -84,7 +84,7 @@ class EndToEndFixtureTests(unittest.TestCase):
         self.assertIn("模型行为由 skill-up", report["claim_limit"])
         self.assertEqual(
             set(report["suites"]),
-            {"trigger", "behavior", "safety", "claim", "yaml-registry"},
+            {"trigger", "behavior", "safety", "claim", "yaml-registry", "safety-cross-source"},
         )
         self.assertIn("SKILL.md 安全锚点", report["claim_limit"])
 

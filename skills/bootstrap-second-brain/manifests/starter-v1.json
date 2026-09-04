@@ -3,8 +3,8 @@
   "starter_version": "0.2.0",
   "source": {
     "root": "我的第二大脑",
-    "commit": "7283946cf9a77a7439acf85ac3c1cf1aeae86902",
-    "tree_digest": "7ebdab0998c23e1d4dd27d3ad0272d3e8a57536aa2da908be07497267a6e0387"
+    "commit": "820849e0fa1d611586933948c580091d10868a2e",
+    "tree_digest": "54e26fb4f35a27185c4f995d01208d59446dd9919d76651cf1196d0ad58e24d0"
   },
   "projection": {
     "root": "assets/starter-kit",
@@ -57,7 +57,7 @@
       "path": "10_当前工作台/00_第二大脑启动契约.md",
       "ownership": "managed-block",
       "layer": "portable-core",
-      "sha256": "e2a39cfdbd9f3e67930d766a1cf71f4ce95b81dcb5f141dbd116bd1589224806"
+      "sha256": "ed682ef57c1a5aba1c0f5f38130e5a22b44b3e447c5ded951b47768bb8e19457"
     },
     {
       "path": "10_当前工作台/README.md",
@@ -93,7 +93,7 @@
       "path": "30_知识主题/到期巡检与到期处置.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "0e4b353cd3254d209720c59b8a150fd35b49641e6e36984db1dc3baa98d990ba"
+      "sha256": "12532a67018c6925b66a8d6685142b2d920f6b3f21a4cbfdfa39b89909bc07c6"
     },
     {
       "path": "30_知识主题/工具选择与升级门禁.md",
@@ -219,13 +219,13 @@
       "path": "90_模板/周报模板.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "26567a223986e70983ced7b48b83c341a8e2055ffad4f3bcbafbc0c55364da23"
+      "sha256": "4b10594e46c4f78b2549995e85aad74c470ba3faca9417e6f1c8f937f9b235f7"
     },
     {
       "path": "90_模板/字段与状态速查.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "2277523ca9d9384b3d1718f33c42783243f42d1ff9ecb5be74908293e6c8f431"
+      "sha256": "88e87e78f82e923ec7396f346e8556cc0afa143c2fcfb078af3237612fa27c67"
     },
     {
       "path": "90_模板/来源模板.md",
@@ -267,7 +267,7 @@
       "path": "99_维护记录/七天冷启动与三十天验收清单.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "1cf0e0b6790c69090f2cd6400827cf1e97d9f479ae2e4ba1cb6507c247c318d2"
+      "sha256": "4a0906d07d49366a165cea3976dbaac36aa135e69cbaa0e687e655d09e308195"
     },
     {
       "path": "99_维护记录/定时任务与知识进化.md",
@@ -303,7 +303,7 @@
       "path": "README.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "47fa7eba21a1db341ee6943f482567e8b7b4c27904e30d7027752ef092504227"
+      "sha256": "cbf639b69d5f0f334c7d4da2f9841390a3419d96305ef885d938bec7b2255709"
     },
     {
       "path": "加载清单.md",
@@ -321,7 +321,7 @@
       "path": "维护日志.md",
       "ownership": "append-only",
       "layer": "portable-core",
-      "sha256": "3714a90bf0cce139c4849bb2920e6ec977f268f113961f94ca720d1becf8c78e"
+      "sha256": "bdbaa12dfdba9ed5ad422b4d7596ba7343eb95c8182c758388f1d4e1537f7291"
     }
   ]
 }

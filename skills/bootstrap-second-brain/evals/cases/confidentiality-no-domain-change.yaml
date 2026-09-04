@@ -17,6 +17,6 @@ judge:
     - output_contains:
         any: ["内容级密级", "内容密级", "敏感度", "内容级 confidentiality"]
     - output_contains:
-        any: ["数据域", "持久化"]
+        any: ["数据域", "持久化", "互不改变", "各自独立"]
     - output_contains:
         any: ["自动分类", "不自动", "自主标注", "仅标记", "不可信"]

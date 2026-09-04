@@ -15,3 +15,4 @@ judge:
         any: ["resume", "恢复已有", "恢复既有", "恢复初始化"]
     - output_contains:
         all: ["收据", "漂移"]
+        any: ["plan_stale", "漂移即停", "重新规划"]

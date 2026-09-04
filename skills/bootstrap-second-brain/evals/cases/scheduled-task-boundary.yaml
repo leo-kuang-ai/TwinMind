@@ -15,7 +15,7 @@ judge:
         any: ["不能", "不等于", "不可"]
         not: ["我已经启用这些任务", "这些任务已调度运行"]
     - output_contains:
-        any: ["draft", "任务契约"]
+        any: ["draft", "任务契约", "保持 draft", "维持 draft"]
     - output_contains:
         all: ["授权"]
         any: ["独立计划", "独立规划", "独立调度计划", "调度计划"]

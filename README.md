@@ -8,7 +8,7 @@ TwinMind 把“搭建个人第二大脑”拆成两部分：一份可以直接�
 
 ## 15 分钟 Quick Start
 
-**路径 A（零终端，任何人）**：复制 [`我的第二大脑/`](我的第二大脑/) 文件夹到你喜欢的位置，然后按 [`我的第二大脑/README.md`](我的第二大脑/README.md) 的"第一次使用"五步走——读协议、填启动契约、写下三个真实问题、跑通一个闭环、留复盘。全部能力（治理规则、模板、任务契约、巡检/周报/体检节奏）即刻可用，任选 AI 宿主协作。
+**路径 A（零终端，任何人）**：GitHub 网页上点 **Code → Download ZIP** 解压取 [`我的第二大脑/`](我的第二大脑/) 文件夹（或 git clone 后取该目录），放到你喜欢的位置，然后按 [`我的第二大脑/README.md`](我的第二大脑/README.md) 的"第一次使用"五步走——读协议、填启动契约、写下三个真实问题、跑通一个闭环、留复盘。全部能力（治理规则、模板、任务契约、巡检/周报/体检节奏）即刻可用，任选 AI 宿主协作。
 
 **路径 B（终端 + Codex，推荐给想走完整工程链的人）**：安装 [`bootstrap-second-brain`](skills/bootstrap-second-brain/) Skill，它会先验证 Python 3.11+ 与 Git，再以可审查计划 + 逐项授权的方式初始化、打 Git baseline 并做只读验证——见下文"使用初始化 Skill"。
 
@@ -29,12 +29,12 @@ TwinMind 把“搭建个人第二大脑”拆成两部分：一份可以直接�
 
 ## 小词典
 
-Vault（你的第二大脑根目录）｜控制文件（协议/索引/加载清单/维护日志）｜Starter（本仓库的可复制初始内容）｜Candidate（候选知识，未经门禁不得当事实）｜draft/active（任务契约状态：默认 draft，不接调度器）｜数据域（restricted/confidential/session_only，管访谈数据持久化）｜managed-block（受同步保护的内容区块）｜收据 receipt（工具验证/授权的可校验凭证）｜Git baseline（首次批准提交，恢复的锚点）｜巡检（按 review_at 只读列出到期页）
+Vault（你的第二大脑根目录）｜控制文件（协议/索引/加载清单/维护日志）｜Starter（本仓库的可复制初始内容）｜Candidate（候选知识，未经门禁不得当事实）｜任务状态五档 draft/pilot/active/paused/retired（默认 draft，不接调度器）｜数据域（restricted/confidential/session_only，管访谈数据持久化）｜managed-block（受同步保护的内容区块）｜收据 receipt（工具验证/授权的可校验凭证）｜Git baseline（首次批准提交，恢复的锚点）｜巡检（按 review_at 只读列出到期页）
 
 ## 你将得到什么
 
 - 九区目录：`00 / 10 / 20 / 30 / 40 / 50 / 60 / 90 / 99`，每区自带一份用途 README
-- 六个根控制文件：`AGENTS.md`、`AI协作协议.md`、`加载清单.md`、`知识库索引.md`、`维护日志.md`、`.gitignore`
+- 根目录随附文件：`AI协作协议.md`、`加载清单.md`、`知识库索引.md`、`维护日志.md`、`AGENTS.md`（仅随路径 A 的 Demo 副本提供，Skill `create` 不生成）、`.gitignore`
 - 一页启动契约
 - 五个第一周模板：来源、知识、项目、决策、交付；另有按需使用的学习回放、任务契约、周报与跟踪立项模板
 - 一份建设与运行指南：四阶段路线、日/周/月/季度任务、知识与能力进化门禁

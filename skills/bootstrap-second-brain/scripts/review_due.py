@@ -114,6 +114,7 @@ def _read_frontmatter_bounded(path: Path) -> tuple[str, int]:
 def collect_due_pages(root: Path, today: str | None = None) -> dict:
     today = today or dt.date.today().isoformat()
     due: list[dict[str, str]] = []
+    skipped_pages: list[dict[str, str]] = []
     skipped_malformed = 0
     skipped_unreadable = 0
     scanned_files = 0
@@ -143,23 +144,27 @@ def collect_due_pages(root: Path, today: str | None = None) -> dict:
                 continue
             if len(frontmatter.encode("utf-8", errors="replace")) > FRONTMATTER_BYTES_LIMIT:
                 skipped_malformed += 1
+                skipped_pages.append({"path": path.relative_to(root).as_posix(), "reason": "frontmatter 过长"})
                 continue
             review_at = _parse_review_at(frontmatter)
             if review_at is None:
                 if "review_at:" in frontmatter:
                     skipped_malformed += 1
+                    skipped_pages.append({"path": path.relative_to(root).as_posix(), "reason": "review_at 缺失或非严格 YYYY-MM-DD"})
                 continue
             if review_at < today:
                 due.append({
                     "path": path.relative_to(root).as_posix(),
                     "review_at": review_at,
                 })
+    due.sort(key=lambda entry: (entry["review_at"], entry["path"]))
     return {
         "root": str(root),
         "today": today,
         "timezone": _local_timezone_offset(),
         "due": due,
         "due_count": len(due),
+        "skipped_pages": skipped_pages,
         "skipped_malformed": skipped_malformed,
         "skipped_unreadable": skipped_unreadable,
         "scanned_files": scanned_files,
@@ -177,18 +182,30 @@ def _render_human(result: dict) -> str:
         f"到期 {result['due_count']}；占位/非法日期跳过 {result['skipped_malformed']}；"
         f"不可读跳过 {result['skipped_unreadable']}"
     )
+    for page in result["skipped_pages"][:20]:
+        lines.append(f"  跳过: {page['path']}（{page['reason']}）")
+    if len(result["skipped_pages"]) > 20:
+        lines.append(f"  …等共 {len(result['skipped_pages'])} 页被跳过，--json 可取完整清单")
     return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="按 review_at 列出到期待复核页面（只读）")
+    parser = argparse.ArgumentParser(
+        description="按 review_at 列出到期待复核页面（只读）",
+        epilog=(
+            "用法示例：python3 -I -S -E review_due.py /path/to/vault --json\n"
+            "退出码：0 正常（含零到期与单文件跳过）；2 参数/路径/预算错误。\n"
+            "零写入承诺：本脚本不写入 Vault 内外任何文件。"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("vault_root", help="Vault 根目录的绝对或相对路径")
-    parser.add_argument("--json", action="store_true", help="输出 JSON 单对象")
+    parser.add_argument("--json", action="store_true", help="默认人类可读文本；--json 输出供 AI 宿主/脚本解析的 JSON 单对象")
     args = parser.parse_args(argv)
     try:
         root = normalize_target_path(args.vault_root)
         if not root.is_dir():
-            raise SafetyError(f"目标不是目录：{root}")
+            raise SafetyError(f"目标不是目录：{root}，请确认路径正确")
         result = collect_due_pages(root)
     except (SafetyError, ScanBudgetError) as exc:
         print(f"review_due: {exc}", file=sys.stderr)

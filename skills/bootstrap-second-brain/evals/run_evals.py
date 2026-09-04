@@ -68,7 +68,12 @@ def validate_case(name: str, case: dict) -> dict:
 
 
 def validate_yaml_registry() -> dict:
-    """eval.yaml 注册的前瞻 eval 素材必须存在；PyYAML 可用时同时校验结构。"""
+    """eval.yaml 注册的前瞻 eval 素材必须存在且结构可信；PyYAML 可用时深度校验。
+
+    深度校验四类守卫：键名合法、块非空且含肯定词（仅 not 的空块恒真，拒绝）、
+    每块至少一个判定词不在题干中（防"复述题目即通过"的回声假绿）、
+    expect.must_not_contain 词不得出现在题干（防合规拒绝句被误判）。
+    """
     registry_path = EVAL_ROOT / "eval.yaml"
     if not registry_path.is_file():
         return {"status": "failed", "reason": "eval.yaml 缺失"}
@@ -96,16 +101,50 @@ def validate_yaml_registry() -> dict:
         if not isinstance(judge, dict) or judge.get("type") != "rule_based":
             return {"status": "failed", "reason": f"{entry} judge 非 rule_based"}
         prompt = payload.get("input", {}).get("prompt", "")
+        for word in payload.get("expect", {}).get("must_not_contain", []):
+            if word in prompt:
+                return {"status": "failed", "reason": f"{entry} 的 must_not_contain 词 '{word}' 出现在题干中"}
         for block in judge.get("success", []):
             cond = block.get("output_contains", {})
             for key in cond:
                 if key not in {"any", "all", "not"}:
                     return {"status": "failed", "reason": f"{entry} judge 键非法: {key}"}
-            for word in cond.get("not", []):
-                if word in prompt:
-                    return {"status": "failed", "reason": f"{entry} 的 not 词 '{word}' 出现在自身 prompt 中"}
+            if not cond.get("any") and not cond.get("all"):
+                return {"status": "failed", "reason": f"{entry} 存在仅含 not 的空判定块"}
+            discriminators = [w for key in ("any", "all") for w in cond.get(key, []) if w not in prompt]
+            if not discriminators:
+                return {"status": "failed", "reason": f"{entry} 存在判定词全部是题干子串的回声块"}
+        for word in cond.get("not", []):
+            if word in prompt:
+                return {"status": "failed", "reason": f"{entry} 的 not 词 '{word}' 出现在自身 prompt 中"}
     deep_check = "structure-validated"
     return {"status": "validated", "files": len(file_entries), "ids": len(ids), "deep_check": deep_check}
+
+
+def _safety_cross_source_checks() -> dict:
+    """safety JSON 套件与同名 yaml 的双源一致性：must_not 逐词相等、must 与 yaml 判定词有交集。"""
+    json_cases = {
+        case["id"]: case
+        for case in json.loads((EVAL_ROOT / "cases" / "safety-cases.json").read_text(encoding="utf-8"))["cases"]
+    }
+    try:
+        import yaml  # type: ignore[import-not-found]
+    except ImportError:
+        return {"status": "skipped", "reason": "pyyaml 不可用"}
+    for entry in re.findall(r"^\s*-\s*(evals/cases/[\w.-]+\.yaml)\s*$",
+                            (EVAL_ROOT / "eval.yaml").read_text(encoding="utf-8"), re.M):
+        payload = yaml.safe_load((EVAL_ROOT.parent / entry).read_text(encoding="utf-8"))
+        json_case = json_cases.get(payload.get("id"))
+        if json_case is None:
+            continue
+        yaml_not = list(payload.get("expect", {}).get("must_not_contain", []))
+        if set(json_case.get("must_not", [])) != set(yaml_not):
+            return {"status": "failed", "reason": f"{payload['id']} 双源 must_not 不一致"}
+        yaml_vocab = {w for block in payload["judge"]["success"]
+                      for key in ("any", "all") for w in block["output_contains"].get(key, [])}
+        if not set(json_case.get("must", [])) & yaml_vocab:
+            return {"status": "failed", "reason": f"{payload['id']} JSON must 与 yaml 判定词无交集"}
+    return {"status": "validated"}
 
 
 def run_suite(name: str) -> dict:
@@ -126,6 +165,7 @@ def run_suite(name: str) -> dict:
 def run_all() -> dict:
     suites = {name: run_suite(name) for name in SUITES}
     suites["yaml-registry"] = validate_yaml_registry()
+    suites["safety-cross-source"] = _safety_cross_source_checks()
     ok = all(item["status"] in {"validated", "passed"} for item in suites.values())
     return {"status": "validated" if ok else "failed",
             "suites": suites,
