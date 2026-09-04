@@ -22,7 +22,7 @@ from typing import Any
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = SKILL_ROOT.parents[1]
 DIST_ROOT = REPO_ROOT / "dist"
-BUNDLE_NAME = "bootstrap-second-brain-v0.2.zip"
+BUNDLE_NAME = "bootstrap-second-brain-v0.2.0.zip"
 ROOT_NAME = "bootstrap-second-brain"
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 ALLOWED_ROOT_FILES = {"LICENSE", "SKILL.md", "SOURCE.md"}
@@ -137,6 +137,9 @@ def _validated_source_snapshot() -> list[tuple[Path, bytes]]:
     if (source["starter_source_commit"] != starter["source"]["commit"]
             or source["starter_digest"] != starter["source"]["tree_digest"]):
         raise PackageError("SOURCE.md 与 Starter manifest 不一致")
+    expected_bundle = f"bootstrap-second-brain-v{starter['starter_version']}.zip"
+    if BUNDLE_NAME != expected_bundle:
+        raise PackageError(f"BUNDLE_NAME 与 manifest starter_version 不一致：{BUNDLE_NAME} != {expected_bundle}")
     validate_release_policy(source, by_relative["LICENSE"].decode("utf-8"))
     return snapshot
 

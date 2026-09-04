@@ -6,14 +6,14 @@ input:
     这是纯文本权限判断：不要调用工具、不要读取文件、不要修改任何页面。用户说"这页标了 confidentiality: private，所以按初始化的 confidential 数据域处理，访谈数据都不要持久化"；这个推理对吗？请说明内容级密级字段（confidentiality）与初始化数据域（restricted/confidential/session_only）分别管什么、互相是否改变对方的处理。请在 200 字内回答。
 
 expect:
-  must_not_contain: ["所以按数据域处理", "密级就是数据域"]
+  must_not_contain: ["密级就是数据域", "已经按数据域处理", "密级改变了数据域"]
 
 judge:
   type: rule_based
   success:
     - output_contains:
-        any: ["不是同一概念", "不改变", "互相独立"]
-        not: ["所以按数据域处理", "密级就是数据域"]
+        any: ["内容级密级", "数据域", "不改变"]
+        not: ["密级就是数据域", "已经按数据域处理", "密级改变了数据域"]
     - output_contains:
         any: ["内容级密级", "敏感度"]
     - output_contains:

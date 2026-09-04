@@ -20,7 +20,7 @@ skill、agent、模板、历史上下文或示例文本的原文语言不得覆�
 
 - `python3 -I -S -E skills/bootstrap-second-brain/scripts/sync_starter_assets.py --check`：检查 canonical Starter 与投影是否一致。
 - `python3 -m unittest discover -s skills/bootstrap-second-brain/tests -p 'test_*.py'`：运行完整测试套件。
-- `python3 skills/bootstrap-second-brain/evals/run_evals.py --suite all`：运行 Skill 行为、安全与触发评测。
+- `python3 skills/bootstrap-second-brain/evals/run_evals.py --suite all`：静态校验 eval 用例合同（结构完整性、SKILL.md 安全锚点核对、eval.yaml 注册有效性）；模型行为由 skill-up forward eval 执行并另行排期。
 - `python3 skills/bootstrap-second-brain/scripts/package_skill.py --check`：校验打包契约；仅在需要生成本地构建物时使用 `--write`。
 
 项目要求 Python 3.11+。提交前至少运行与改动相关的测试；修改 Starter、schema 或发布逻辑时运行以上全部检查。

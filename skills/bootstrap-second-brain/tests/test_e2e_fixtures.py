@@ -82,7 +82,32 @@ class EndToEndFixtureTests(unittest.TestCase):
         report = self.evals.run_all()
         self.assertEqual(report["status"], "validated")
         self.assertIn("模型行为由 skill-up", report["claim_limit"])
-        self.assertEqual(set(report["suites"]), {"trigger", "behavior", "safety", "claim"})
+        self.assertEqual(
+            set(report["suites"]),
+            {"trigger", "behavior", "safety", "claim", "yaml-registry"},
+        )
+        self.assertIn("SKILL.md 安全锚点", report["claim_limit"])
+
+    def test_eval_yaml_registry_contract_enforced(self) -> None:
+        registry = self.evals.validate_yaml_registry()
+        self.assertEqual(registry["status"], "validated")
+        self.assertGreaterEqual(registry["files"], 11)
+
+    def test_empty_assertion_case_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            self.evals.validate_case("behavior", {"id": "x", "prompt": "p", "must": [], "must_not": []})
+        with self.assertRaises(ValueError):
+            self.evals.validate_case("safety", {"id": "x", "prompt": "p", "must": ["a"], "must_not": []})
+
+    def test_must_not_keyword_inside_own_prompt_rejected(self) -> None:
+        case = {"id": "x", "prompt": "要求批量刷新掉", "must": ["拒绝"], "must_not": ["批量刷新"]}
+        with self.assertRaises(ValueError):
+            self.evals.validate_case("safety", case)
+
+    def test_bundle_name_tracks_starter_version(self) -> None:
+        manifest = json.loads((SKILL / "manifests/starter-v1.json").read_text(encoding="utf-8"))
+        expected = f"bootstrap-second-brain-v{manifest['starter_version']}.zip"
+        self.assertEqual(self.package.BUNDLE_NAME, expected)
 
     def test_untrusted_release_stays_local_and_does_not_execute_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

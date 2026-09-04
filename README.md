@@ -115,6 +115,8 @@ python3 skills/bootstrap-second-brain/scripts/package_skill.py --check
 python3 skills/bootstrap-second-brain/scripts/package_skill.py --write
 ```
 
+其中 evals 命令是静态合同校验（含 SKILL.md 安全锚点核对），不执行模型行为；行为级证明由 skill-up forward eval 承担并另行排期。
+
 `package_skill.py --write` 只生成本地 build-only 的确定性 ZIP 与 SHA-256，不是独立 ZIP 发布成功证据。独立 ZIP 必须在 `--verify-release` 完成 OpenSSH 双签名、包内容和许可证校验后，才能跨机器分发或安装；这与 GitHub 源码发布是两个证据层。
 
 ## 发布策略

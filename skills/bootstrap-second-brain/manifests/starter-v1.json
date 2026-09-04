@@ -3,8 +3,8 @@
   "starter_version": "0.2.0",
   "source": {
     "root": "我的第二大脑",
-    "commit": "58836f306fd50c161328af666481b19bb9ad4768",
-    "tree_digest": "86d318c8a8e42ead9d0b9d921950725852ea19eb52400df30af79a51734ea484"
+    "commit": "997f11d84a2cfeb43fe97fd3790c1210b30ecb9c",
+    "tree_digest": "e276a56c39c8d88825270abe2fb0838d998df6e9fcd1eb0804bbb7b64e857e19"
   },
   "projection": {
     "root": "assets/starter-kit",
@@ -93,7 +93,7 @@
       "path": "30_知识主题/到期巡检与到期处置.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "7afff6e8ccfd52a70c925f3b70a7d0408f842f45b34ae18a026ecba46e1e5724"
+      "sha256": "0e4b353cd3254d209720c59b8a150fd35b49641e6e36984db1dc3baa98d990ba"
     },
     {
       "path": "30_知识主题/工具选择与升级门禁.md",
@@ -219,13 +219,13 @@
       "path": "90_模板/周报模板.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "6bddda14f438d243f28d5039be57977056f9446726e9ff59bb433ecf31948f80"
+      "sha256": "26567a223986e70983ced7b48b83c341a8e2055ffad4f3bcbafbc0c55364da23"
     },
     {
       "path": "90_模板/字段与状态速查.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "534b3b5b201e3fdf28c6bb1140157b5e218178f293fe95610de0e1c352ff9fc7"
+      "sha256": "2277523ca9d9384b3d1718f33c42783243f42d1ff9ecb5be74908293e6c8f431"
     },
     {
       "path": "90_模板/来源模板.md",
@@ -279,7 +279,7 @@
       "path": "99_维护记录/每周知识体检清单.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "614b2792a7e45d799742f845ee24c42e3d814004bb474313797edcfa85cbf9c8"
+      "sha256": "70579d1076e48cb3ea63ee2d3db9f3e704ccc04c64c7299fa19a0313263fe010"
     },
     {
       "path": "99_维护记录/每月检查与季度反熵清单.md",
@@ -291,7 +291,7 @@
       "path": "AI协作协议.md",
       "ownership": "managed-block",
       "layer": "portable-core",
-      "sha256": "7a5950f647632ea108e2cb7e50b3ce764add163765febc72c6feb8a127e0292f"
+      "sha256": "def84267d7021f7e86216af322c6fbabd30d6158272f0c96acf02ddbcb28ff20"
     },
     {
       "path": "LICENSE",
