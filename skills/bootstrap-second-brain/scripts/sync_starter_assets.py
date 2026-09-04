@@ -120,6 +120,8 @@ VENDOR_NAMES = r"(?:WorkBuddy|Obsidian|Codex)"
 MANDATORY_VENDOR_PATTERNS = [
     re.compile(rf"(?:必须|只能|仅能|务必|要求).{{0,30}}{VENDOR_NAMES}", re.IGNORECASE),
     re.compile(rf"{VENDOR_NAMES}.{{0,30}}(?:才能|才可|唯一|不可替换|必需)", re.IGNORECASE),
+    re.compile(rf"(?:只|仅)(?:保留|登记|支持).{{0,30}}{VENDOR_NAMES}", re.IGNORECASE),
+    re.compile(rf"{VENDOR_NAMES}.{{0,15}}(?:首选|唯一入口|官方入口)", re.IGNORECASE),
 ]
 
 

@@ -8,7 +8,9 @@ TwinMind 把“搭建个人第二大脑”拆成两部分：一份可以直接�
 
 ## 15 分钟 Quick Start
 
-**路径 A（零终端，任何人）**：GitHub 网页上点 **Code → Download ZIP** 解压取 [`我的第二大脑/`](我的第二大脑/) 文件夹（或 git clone 后取该目录），放到你喜欢的位置，然后按 [`我的第二大脑/README.md`](我的第二大脑/README.md) 的"第一次使用"五步走——读协议、填启动契约、写下三个真实问题、跑通一个闭环、留复盘。全部能力（治理规则、模板、任务契约、巡检/周报/体检节奏）即刻可用，任选 AI 宿主协作。
+**路径 A（零终端，任何人）**：GitHub 网页上点 **Code → Download ZIP** 解压取 [`我的第二大脑/`](我的第二大脑/) 文件夹（或 git clone 后取该目录），放到你喜欢的位置，然后按 [`我的第二大脑/README.md`](我的第二大脑/README.md) 的"第一次使用"五步走——读协议、填启动契约、写下三个真实问题、跑通一个闭环、留复盘。
+
+全部能力（治理规则、模板、任务契约、巡检/周报/体检节奏）即刻可用，任选 AI 宿主协作。
 
 **路径 B（终端 + Codex，推荐给想走完整工程链的人）**：安装 [`bootstrap-second-brain`](skills/bootstrap-second-brain/) Skill，它会先验证 Python 3.11+ 与 Git，再以可审查计划 + 逐项授权的方式初始化、打 Git baseline 并做只读验证——见下文"使用初始化 Skill"。
 
@@ -23,18 +25,18 @@ TwinMind 把“搭建个人第二大脑”拆成两部分：一份可以直接�
 ## 常见问题
 
 - **不用 Codex / 不装 Skill 能用吗？** 能。Skill 只负责检查、授权、初始化与验证这些工程动作；内容层（协议、模板、任务契约、流程文档）复制即用。
-- **和自己建一堆 Markdown 文件夹有什么区别？** 区别在治理与节奏：证据分级让"检索到 ≠ 可作为依据"，冲突登记防静默合并，任务契约默认不接调度器，每周 30 分钟三步卡（巡检 → 体检 → 周报）让库产生日常回报而非无限堆积。
+- **和自己建一堆 Markdown 文件夹有什么区别？** 区别在治理与节奏：证据分级让"检索到 ≠ 可作为依据"，冲突登记防静默合并，任务契约默认不接调度器，每周 30 分钟三步卡（[巡检 → 体检 → 周报](我的第二大脑/README.md#每周-30-分钟三步卡)）让库产生日常回报而非无限堆积。
 - **我的数据在哪、会被上传吗？** 全部是本地文件夹 + 本地 Git；默认离线，不创建远程仓库、不 push、不装插件。
 - **什么时候才需要语义检索/RAG？** 本项目刻意不预装：当"准确关键词仍稳定漏召回"的真实失败反复出现并登记后，才按[工具选择与升级门禁](我的第二大脑/30_知识主题/工具选择与升级门禁.md)评估升级——在那之前，先把每次"找不到"记到维护日志，这就是未来的升级依据。
 
 ## 小词典
 
-Vault（你的第二大脑根目录）｜控制文件（协议/索引/加载清单/维护日志）｜Starter（本仓库的可复制初始内容）｜Candidate（候选知识，未经门禁不得当事实）｜任务状态五档 draft/pilot/active/paused/retired（默认 draft，不接调度器）｜数据域（restricted/confidential/session_only，管访谈数据持久化）｜managed-block（受同步保护的内容区块）｜收据 receipt（工具验证/授权的可校验凭证）｜Git baseline（首次批准提交，恢复的锚点）｜巡检（按 review_at 只读列出到期页）
+Vault（你的第二大脑根目录）｜Demo（本仓库的 `我的第二大脑/` 示例文件夹）｜run / run-id（一次初始化或恢复流程的标识，用于 resume 与收据绑定）｜控制文件（协议/索引/加载清单/维护日志）｜Starter（本仓库的可复制初始内容）｜Candidate（候选知识，未经门禁不得当事实）｜任务状态五档 draft/pilot/active/paused/retired（默认 draft，不接调度器）｜数据域（restricted/confidential/session_only，管访谈数据持久化）｜managed-block（受同步保护的内容区块）｜收据 receipt（工具验证/授权的可校验凭证）｜Git baseline（首次批准提交，恢复的锚点）｜巡检（按 review_at 只读列出到期页）
 
 ## 你将得到什么
 
 - 九区目录：`00 / 10 / 20 / 30 / 40 / 50 / 60 / 90 / 99`，每区自带一份用途 README
-- 根目录随附文件：`AI协作协议.md`、`加载清单.md`、`知识库索引.md`、`维护日志.md`、`AGENTS.md`（仅随路径 A 的 Demo 副本提供，Skill `create` 不生成）、`.gitignore`
+- 根目录随附文件：`AI协作协议.md`、`加载清单.md`、`知识库索引.md`、`维护日志.md`、`AGENTS.md`（仅随路径 A 的 Demo——即本仓库 `我的第二大脑/` 示例文件夹——提供，Skill `create` 不生成）、`.gitignore`
 - 一页启动契约
 - 五个第一周模板：来源、知识、项目、决策、交付；另有按需使用的学习回放、任务契约、周报与跟踪立项模板
 - 一份建设与运行指南：四阶段路线、日/周/月/季度任务、知识与能力进化门禁
@@ -49,12 +51,7 @@ Vault（你的第二大脑根目录）｜控制文件（协议/索引/加载清�
 
 ## 从哪里开始
 
-| 目标 | 推荐入口 | 写入范围 |
-| --- | --- | --- |
-| 新建一个第二大脑 | `bootstrap-second-brain` 的 `create` | 仅写入你批准的 Vault 路径 |
-| 检查已有 TwinMind Vault | `verify` | 零写入，生成外部私有报告 |
-| 盘点其他非空 Vault | `adopt-existing` | 只读 inventory，不合并资料 |
-| 继续已有初始化 | `resume` | 仅执行当前 run 中再次批准的操作 |
+新建走上文 Quick Start 的路径 A 或路径 B；已有 Vault 用 Skill 的 `verify`（零写入体检）、`adopt-existing`（只读盘点，不合并资料）、`resume`（仅执行当前 run 中再次批准的操作）——各命令的写入范围与请求话术见下节。
 
 ## 使用初始化 Skill
 
@@ -93,7 +90,7 @@ rsync -a --delete skills/bootstrap-second-brain/ "$skill_target/"
 
 ### 标准工作流
 
-1. 只读检查 Python、Git、WorkBuddy 和 Obsidian 的可信来源与可用状态；
+1. 只读检查必需工具（Python、Git）与推荐工具（WorkBuddy、Obsidian）的可信来源与可用状态；
 2. 确认目标绝对路径、父级 Git 边界、隐私数据域和恢复方式；
 3. 生成带摘要的 scaffold plan，展示预期文件、风险和 operation IDs；
 4. 用户批准明确 operation 后生成 Starter；
@@ -105,15 +102,15 @@ rsync -a --delete skills/bootstrap-second-brain/ "$skill_target/"
 
 ## 已初始化的库如何升级
 
-已经用旧版 TwinMind 初始化过的 Vault，按"对照吸收"方式获得新内容，全程无自动迁移：
+已经用旧版 TwinMind 初始化过的 Vault，按"对照吸收"方式获得新内容，全程无自动迁移。对照入口：`CHANGELOG.md` 当前批次条目 + Demo `维护日志.md` 的 0.2.0 收口条目（列明了本批新增文件）；`知识库索引.md` 的 Starter 版本行可确认你差哪一版：
 
 | 类别 | 处理方式 |
 | --- | --- |
-| 可安全对照更新 | 根控制文件（`AI协作协议.md`、`加载清单.md`、`知识库索引.md`）、`90_模板/` 下的模板、`30_知识主题/` 与 `99_维护记录/` 的流程文档——逐份对照新版差异，选择要吸收的部分；你的既有填写的字段不要被模板占位值覆盖 |
+| 可安全对照更新 | 根控制文件（`AI协作协议.md`、`加载清单.md`、`知识库索引.md`）、`90_模板/` 下的模板、`30_知识主题/` 与 `99_维护记录/` 的流程文档；新增目录（如 `60_任务系统/`）按变更清单整目录对照——逐份对照新版差异，选择要吸收的部分；你的既有填写的字段不要被模板占位值覆盖 |
 | 你的内容，不要动 | 九个分区里你自己写的页面（`00`~`40`、`90` 里已填的实例、`99` 的历史记录） |
 | 辅助入口 | 用 `verify` 做一次零写入体检看结构差异；用 `adopt-existing` 只读盘点非 TwinMind 库；两者都不会合并或覆盖内容 |
 
-升级后建议跑一次每周知识体检清单，把新增治理字段（authority / review_at / evidence_note）逐页补到高频知识页，而不是全量补齐。
+升级后建议跑一次每周知识体检清单，把新增治理字段（authority / review_at / evidence_note）逐页补到高频知识页，而不是全量补齐。`维护日志.md` 只把头部六段式规范段并入你的现有日志顶部，历史条目原样保留、不回填。
 
 ## 版本口径
 
@@ -142,13 +139,13 @@ python3 skills/bootstrap-second-brain/scripts/package_skill.py --write
 ### 发布策略
 
 - 发布许可：MIT，仓库根目录和 Skill 分发包内均携带完整许可证。
-- 正式源码发布：先提交全部授权变更并确认 staged、unstaged、untracked 均为空，再冻结 `release_commit`。将该 commit 推送到 canonical GitHub 分支，核验远端 SHA 与 `release_commit` 一致，并确认该远端 commit 包含 `LICENSE`、`README.md` 和 `skills/bootstrap-second-brain/SOURCE.md`，才视为发布成功。
+- 正式源码发布：先在 canonical 分支 `main` 上合入全部授权变更（未合并的分支提交须先合并/推送），确认 staged、unstaged、untracked 均为空，再冻结 `release_commit`。将该 commit 推送到 canonical GitHub 分支，核验远端 SHA 与 `release_commit` 一致，并确认该远端 commit 包含 `LICENSE`、`README.md` 和 `skills/bootstrap-second-brain/SOURCE.md`，才视为发布成功。
 - 独立 ZIP 分发：SHA-256 只证明字节一致；未通过 `--verify-release` 的 ZIP 不得跨机器分发或安装。验证使用 bundle/attestation 双签名、独立渠道 Owner 公钥指纹和可信 OpenSSH verifier。
 - 发布成功不等于真实用户成效已验证；`initialized`、`activated`、pilot 和 proven 仍按各自证据门禁判断。
 
 ### Skill 支持边界
 
-- v0.1 正式支持 Codex、macOS 和 Python 3.11+；Linux 仅保留文件系统兼容候选，Windows 延后。
+- 当前版本（Starter 0.2.0）正式支持 Codex、macOS 和 Python 3.11+；Linux 仅保留文件系统兼容候选，Windows 延后。
 - 支持 create、verify、create-run resume，以及 adopt-existing 的只读 inventory/接管计划。
 - 默认离线，不自动 sudo、下载、安装社区插件、修改全局 Git 配置、创建 remote 或 push。
 - 源码与 Skill 采用 MIT 许可证；正式 GitHub 源码发布必须满足上述 `release_commit` 与远端核验门禁。

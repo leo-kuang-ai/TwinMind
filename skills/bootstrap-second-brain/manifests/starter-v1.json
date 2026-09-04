@@ -3,8 +3,8 @@
   "starter_version": "0.2.0",
   "source": {
     "root": "我的第二大脑",
-    "commit": "9cef8b0a4e7a7427bb1bc830c39f166731fd5d18",
-    "tree_digest": "903c843f580c8fca6ad3c914d16c85828a2cbec69466ae8befa4dae6b8f601bc"
+    "commit": "970439bfe104d870ccd93d12be93ba53e92ffc43",
+    "tree_digest": "c2a72ce3d8ec22e937966d11bb6efc7d64d70f0bbfceec0fe0dfe8e47c01b664"
   },
   "projection": {
     "root": "assets/starter-kit",
@@ -51,7 +51,7 @@
       "path": "00_待处理/README.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "1620284bbb7e4f7de353316c56ce22f914a1cb7d9d02dfeb0ce63acc8f17d313"
+      "sha256": "f0605924fb5bcabf1bd44a8107fef425a78bf556bb1940cea4c24ffae4cf70f3"
     },
     {
       "path": "10_当前工作台/00_第二大脑启动契约.md",
@@ -93,7 +93,7 @@
       "path": "30_知识主题/到期巡检与到期处置.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "0078ec7efc3afc62d021552115a35fe781e6a58593d47f6f5a1c9e32e1f1c258"
+      "sha256": "a262bf4d35db0fd895bdc053d5a25ad35f9f0740c09f2aae16237f37492949f5"
     },
     {
       "path": "30_知识主题/工具选择与升级门禁.md",
@@ -105,13 +105,13 @@
       "path": "30_知识主题/来源登记与摄取分档.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "cb9f9775c1e26809164c2e05042f3008471cf7eef68fee30fc6689698ebe484f"
+      "sha256": "de70ca37839ca04d40ce5e86628d469c13d24d0e6f7347acf3d07057b14ce79d"
     },
     {
       "path": "30_知识主题/第二大脑完整工具清单.md",
       "ownership": "static",
       "layer": "tooling-adapter",
-      "sha256": "1b8a1f6a61ee5bfdfb0e7928b68a2894af42c093efa1a7bcbb57279d9976a31c"
+      "sha256": "925d9f6655cf61e26e4b59be50a9dca5e03317fec31eccf64024778b90cdcf1d"
     },
     {
       "path": "30_知识主题/第二大脑建设与运行方法论.md",
@@ -219,7 +219,7 @@
       "path": "90_模板/周报模板.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "4b10594e46c4f78b2549995e85aad74c470ba3faca9417e6f1c8f937f9b235f7"
+      "sha256": "3e33549d40dc74172647cffbb21b768bf4ef301edb6bb3d2818cc5082508c16d"
     },
     {
       "path": "90_模板/字段与状态速查.md",
@@ -243,7 +243,7 @@
       "path": "90_模板/跟踪型项目立项模板.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "0464c1a94d73b25a9e0d0d934397ee7d451542c07d4cd8858a33b447e6422c1d"
+      "sha256": "672443bc13469e12e224d7f944feaa300ead27bc1270ee4aee148a5135beee16"
     },
     {
       "path": "90_模板/项目模板.md",
@@ -279,7 +279,7 @@
       "path": "99_维护记录/每周知识体检清单.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "70579d1076e48cb3ea63ee2d3db9f3e704ccc04c64c7299fa19a0313263fe010"
+      "sha256": "f7b86e35f044eafefeeec737e7ee18627b34be878348a801c238a87cdc176129"
     },
     {
       "path": "99_维护记录/每月检查与季度反熵清单.md",
@@ -315,7 +315,7 @@
       "path": "知识库索引.md",
       "ownership": "managed-block",
       "layer": "portable-core",
-      "sha256": "13d932ae42d5457ff5d8dffdb55af1511cb53df77f55a60c3791c295b78501aa"
+      "sha256": "3060df6e501997b258aca943ca1a388f9f83e2eec42fc1f119b475475070f8f8"
     },
     {
       "path": "维护日志.md",
