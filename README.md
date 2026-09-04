@@ -2,9 +2,7 @@
 
 TwinMind 把“搭建个人第二大脑”拆成两部分：一份可以直接复制的 Vault 示例，以及一个负责检查、规划、授权、初始化和验证的 Codex Skill。它适合希望先从可控的文件夹和 Markdown 开始，再逐步建立个人知识工作流的人。
 
-- 想先看结构：直接浏览 [`我的第二大脑/`](我的第二大脑/)。
-- 想自动初始化或验证：安装并使用 [`bootstrap-second-brain`](skills/bootstrap-second-brain/)。
-- 想了解设计取舍：阅读文章[《个人第二大脑搭建指南：5万字讲透架构、AI协作与进化》](https://mp.weixin.qq.com/s/8Gq9vFm44EFm_7nBW7znAA)。
+从 15 分钟 Quick Start 开始（见下），或先读设计取舍长文[《个人第二大脑搭建指南：5万字讲透架构、AI协作与进化》](https://mp.weixin.qq.com/s/8Gq9vFm44EFm_7nBW7znAA)。
 
 本项目采用 [MIT License](LICENSE) 开源发布。
 
@@ -58,32 +56,6 @@ Vault（你的第二大脑根目录）｜控制文件（协议/索引/加载清�
 | 盘点其他非空 Vault | `adopt-existing` | 只读 inventory，不合并资料 |
 | 继续已有初始化 | `resume` | 仅执行当前 run 中再次批准的操作 |
 
-如果你只想手工体验，复制 [`我的第二大脑/`](我的第二大脑/) 即可；仍建议完成工具检查、Git 初始化、首次 baseline commit、差异审查和恢复演练。
-
-## 已初始化的库如何升级
-
-已经用旧版 TwinMind 初始化过的 Vault，按"对照吸收"方式获得新内容，全程无自动迁移：
-
-| 类别 | 处理方式 |
-| --- | --- |
-| 可安全对照更新 | 根控制文件（`AI协作协议.md`、`加载清单.md`、`知识库索引.md`）、`90_模板/` 下的模板、`30_知识主题/` 与 `99_维护记录/` 的流程文档——逐份对照新版差异，选择要吸收的部分；你的既有填写的字段不要被模板占位值覆盖 |
-| 你的内容，不要动 | 九个分区里你自己写的页面（`00`~`40`、`90` 里已填的实例、`99` 的历史记录） |
-| 辅助入口 | 用 `verify` 做一次零写入体检看结构差异；用 `adopt-existing` 只读盘点非 TwinMind 库；两者都不会合并或覆盖内容 |
-
-升级后建议跑一次每周知识体检清单，把新增治理字段（authority / review_at / evidence_note）逐页补到高频知识页，而不是全量补齐。
-
-## 版本口径
-
-Starter 内容版本（`starter-v1.json` 的 `starter_version`，当前 0.2.0）与工程变更日志版本（仓库 `CHANGELOG.md` 的 v1.x 序列）是两套并存的口径：前者标识你库里的 Starter 内容代次，后者标识仓库工程演进。
-
-## 五份原附录的取舍
-
-- **A 目录与字段**：原目录已过时，不原样复制；保留校准后的 [字段与状态速查](我的第二大脑/90_模板/字段与状态速查.md)；
-- **B 七天与三十天**：纳入 [七天冷启动与三十天验收清单](我的第二大脑/99_维护记录/七天冷启动与三十天验收清单.md)；
-- **C Memory OS 命令**：不纳入假设命令，Demo 没有 `tools/memory.py`；运行方法见 [定时任务与知识进化](我的第二大脑/99_维护记录/定时任务与知识进化.md)，可执行契约见 [任务注册表](我的第二大脑/60_任务系统/00_任务注册表.md)；
-- **D 工具技术栈**：移除易过期价格、版本、固定时间和错误字段口径；完整目录纳入 [第二大脑完整工具清单](我的第二大脑/30_知识主题/第二大脑完整工具清单.md)，升级判断纳入 [工具选择与升级门禁](我的第二大脑/30_知识主题/工具选择与升级门禁.md)；
-- **E 失败与反熵**：修正旧路径和硬阈值，纳入 [每月检查与季度反熵清单](我的第二大脑/99_维护记录/每月检查与季度反熵清单.md)。
-
 ## 使用初始化 Skill
 
 Canonical Skill 位于 `skills/bootstrap-second-brain/`。Codex 用户可以在仓库根目录执行：
@@ -131,7 +103,29 @@ rsync -a --delete skills/bootstrap-second-brain/ "$skill_target/"
 
 每个写入阶段都需要独立计划与授权。Skill 不会静默安装软件、覆盖旧库、创建远程仓库、push、批量安装插件或修改全局 Git 配置。
 
-## 维护者验证
+## 已初始化的库如何升级
+
+已经用旧版 TwinMind 初始化过的 Vault，按"对照吸收"方式获得新内容，全程无自动迁移：
+
+| 类别 | 处理方式 |
+| --- | --- |
+| 可安全对照更新 | 根控制文件（`AI协作协议.md`、`加载清单.md`、`知识库索引.md`）、`90_模板/` 下的模板、`30_知识主题/` 与 `99_维护记录/` 的流程文档——逐份对照新版差异，选择要吸收的部分；你的既有填写的字段不要被模板占位值覆盖 |
+| 你的内容，不要动 | 九个分区里你自己写的页面（`00`~`40`、`90` 里已填的实例、`99` 的历史记录） |
+| 辅助入口 | 用 `verify` 做一次零写入体检看结构差异；用 `adopt-existing` 只读盘点非 TwinMind 库；两者都不会合并或覆盖内容 |
+
+升级后建议跑一次每周知识体检清单，把新增治理字段（authority / review_at / evidence_note）逐页补到高频知识页，而不是全量补齐。
+
+## 版本口径
+
+Starter 内容版本（`starter-v1.json` 的 `starter_version`，当前 0.2.0）与工程变更日志版本（仓库 `CHANGELOG.md` 的 v1.x 序列）是两套并存的口径：前者标识你库里的 Starter 内容代次，后者标识仓库工程演进。
+
+## 使用边界
+
+第一版不需要 Memory OS、RAG、语义检索、插件或自动化。只有真实失败反复出现时再升级；原件不被摘要覆盖，Candidate 不自动变成事实，高风险操作保留人工确认。
+
+## 维护者与发布参考
+
+### 维护者验证
 
 ```bash
 python3 -I -S -E skills/bootstrap-second-brain/scripts/sync_starter_assets.py --check
@@ -145,14 +139,14 @@ python3 skills/bootstrap-second-brain/scripts/package_skill.py --write
 
 `package_skill.py --write` 只生成本地 build-only 的确定性 ZIP 与 SHA-256，不是独立 ZIP 发布成功证据。独立 ZIP 必须在 `--verify-release` 完成 OpenSSH 双签名、包内容和许可证校验后，才能跨机器分发或安装；这与 GitHub 源码发布是两个证据层。
 
-## 发布策略
+### 发布策略
 
 - 发布许可：MIT，仓库根目录和 Skill 分发包内均携带完整许可证。
 - 正式源码发布：先提交全部授权变更并确认 staged、unstaged、untracked 均为空，再冻结 `release_commit`。将该 commit 推送到 canonical GitHub 分支，核验远端 SHA 与 `release_commit` 一致，并确认该远端 commit 包含 `LICENSE`、`README.md` 和 `skills/bootstrap-second-brain/SOURCE.md`，才视为发布成功。
 - 独立 ZIP 分发：SHA-256 只证明字节一致；未通过 `--verify-release` 的 ZIP 不得跨机器分发或安装。验证使用 bundle/attestation 双签名、独立渠道 Owner 公钥指纹和可信 OpenSSH verifier。
 - 发布成功不等于真实用户成效已验证；`initialized`、`activated`、pilot 和 proven 仍按各自证据门禁判断。
 
-## Skill 支持边界
+### Skill 支持边界
 
 - v0.1 正式支持 Codex、macOS 和 Python 3.11+；Linux 仅保留文件系统兼容候选，Windows 延后。
 - 支持 create、verify、create-run resume，以及 adopt-existing 的只读 inventory/接管计划。
@@ -161,9 +155,13 @@ python3 skills/bootstrap-second-brain/scripts/package_skill.py --write
 - 未完成外部签名验证的独立 ZIP 只能声明 `distribution_authentication=unverified`，不能宣称已验证发布者来源。
 - 安装、结构生成、Git baseline 和 activated/proven 是不同证据层，不能相互补偿。
 
-## 使用边界
+### 五份原附录的取舍
 
-第一版不需要 Memory OS、RAG、语义检索、插件或自动化。只有真实失败反复出现时再升级；原件不被摘要覆盖，Candidate 不自动变成事实，高风险操作保留人工确认。
+- **A 目录与字段**：原目录已过时，不原样复制；保留校准后的 [字段与状态速查](我的第二大脑/90_模板/字段与状态速查.md)；
+- **B 七天与三十天**：纳入 [七天冷启动与三十天验收清单](我的第二大脑/99_维护记录/七天冷启动与三十天验收清单.md)；
+- **C Memory OS 命令**：不纳入假设命令，Demo 没有 `tools/memory.py`；运行方法见 [定时任务与知识进化](我的第二大脑/99_维护记录/定时任务与知识进化.md)，可执行契约见 [任务注册表](我的第二大脑/60_任务系统/00_任务注册表.md)；
+- **D 工具技术栈**：移除易过期价格、版本、固定时间和错误字段口径；完整目录纳入 [第二大脑完整工具清单](我的第二大脑/30_知识主题/第二大脑完整工具清单.md)，升级判断纳入 [工具选择与升级门禁](我的第二大脑/30_知识主题/工具选择与升级门禁.md)；
+- **E 失败与反熵**：修正旧路径和硬阈值，纳入 [每月检查与季度反熵清单](我的第二大脑/99_维护记录/每月检查与季度反熵清单.md)。
 
 ## 加入群聊
 
