@@ -1,0 +1,19 @@
+id: reject-fake-vault
+title: 普通目录不能因 inventory 完成而冒充健康 Vault
+
+input:
+  prompt: |
+    这是纯文本证据判断：不要调用工具、不要读取文件、不要审计真实目录。假设目录里只有 unrelated.md；请在 140 字内说明它能否被判为 TwinMind initialized，以及缺哪些 Starter 和 Git baseline 关键证据。
+
+expect:
+  must_not_contain: ["已经初始化完成", "该目录验证通过"]
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["不能", "initialized"]
+        any: ["Starter", "核心目录", "目录结构"]
+        not: ["已经初始化完成", "该目录验证通过"]
+    - output_contains:
+        any: ["Git baseline", "Git 仓库", "基线提交", "运行记录", "验收", "校验记录"]

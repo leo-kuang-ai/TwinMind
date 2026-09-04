@@ -4,7 +4,7 @@
   "source": {
     "root": "我的第二大脑",
     "commit": "16619432d5918f4d5e0a766edeaefeecab350dc8",
-    "tree_digest": "3885fe0f73c7ad89906d6d90da6cf3e17a809e38da0e6ffd63a5860ab47e7869"
+    "tree_digest": "53bfd1d643625f7ca8ca593b25736a2e88d2d1ce70a51855e175d222d21fea45"
   },
   "projection": {
     "root": "assets/starter-kit",
@@ -12,7 +12,9 @@
   },
   "exclusions": {
     "exact_paths": [
-      "AGENTS.md"
+      "AGENTS.md",
+      "99_维护记录/TwinMind Starter 宿主中立化交付记录.md",
+      "99_维护记录/TwinMind第二大脑初始化Skill实施交付记录.md"
     ],
     "directory_names": [
       ".git",
@@ -230,18 +232,6 @@
       "ownership": "static",
       "layer": "portable-core",
       "sha256": "c2e0b0dc437768f12dc31e6f1afb3e84d550661b2ae8db97779e412621b48ae5"
-    },
-    {
-      "path": "99_维护记录/TwinMind Starter 宿主中立化交付记录.md",
-      "ownership": "static",
-      "layer": "portable-core",
-      "sha256": "fe1981c28984b5b9d8ce945adad678b393c307af265bc5d4252f1e90fb251cbe"
-    },
-    {
-      "path": "99_维护记录/TwinMind第二大脑初始化Skill实施交付记录.md",
-      "ownership": "static",
-      "layer": "portable-core",
-      "sha256": "5f7a162f0a9ffe8fd407851bf8ab89c0cecb6133bb7cc77e17b1c7a591f48d29"
     },
     {
       "path": "99_维护记录/七天冷启动与三十天验收清单.md",

@@ -28,11 +28,16 @@ class ApplyRecoverTests(unittest.TestCase):
     def authorization(self, plan: dict) -> dict:
         return self.bootstrap.authorize_plan(plan, [item["operation_id"] for item in plan["operations"]])
 
+    def scaffold_plan(self, target: Path, *, allow_existing_projection: bool = False) -> dict:
+        receipt = self.bootstrap.example_verified_tool_readiness_receipt("run-apply-test")
+        return self.bootstrap.build_scaffold_plan(
+            target, receipt, allow_existing_projection=allow_existing_projection)
+
     def test_plan_drift_fails_before_any_target_write(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "Vault"
             target.mkdir()
-            plan = self.bootstrap.build_scaffold_plan(target)
+            plan = self.scaffold_plan(target)
             (target / "user.md").write_text("new", encoding="utf-8")
             before = self.bootstrap.VERIFY.snapshot_tree(target)
             result = self.bootstrap.apply_scaffold(plan, self.authorization(plan))
@@ -44,7 +49,7 @@ class ApplyRecoverTests(unittest.TestCase):
             root = Path(temp)
             target = root / "Vault"
             target.mkdir()
-            plan = self.bootstrap.build_scaffold_plan(target)
+            plan = self.scaffold_plan(target)
             copied_assets = root / "starter-kit"
             shutil.copytree(self.bootstrap.ASSET_ROOT, copied_assets)
             (copied_assets / "README.md").write_text("tampered", encoding="utf-8")
@@ -61,16 +66,16 @@ class ApplyRecoverTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "Vault"
             target.mkdir()
-            plan = self.bootstrap.build_scaffold_plan(target)
+            plan = self.scaffold_plan(target)
             auth = self.authorization(plan)
             first = self.bootstrap.apply_scaffold(plan, auth)
             self.assertEqual(first["command_outcome"], "success")
-            second_plan = self.bootstrap.build_scaffold_plan(target, allow_existing_projection=True)
+            second_plan = self.scaffold_plan(target, allow_existing_projection=True)
             second = self.bootstrap.apply_scaffold(second_plan, self.authorization(second_plan))
             self.assertEqual(second["command_outcome"], "no_changes")
             file_path = target / "README.md"
             file_path.write_text("user changed", encoding="utf-8")
-            conflict_plan = self.bootstrap.build_scaffold_plan(target, allow_existing_projection=True)
+            conflict_plan = self.scaffold_plan(target, allow_existing_projection=True)
             conflict = self.bootstrap.apply_scaffold(conflict_plan, self.authorization(conflict_plan))
             self.assertEqual(conflict["command_outcome"], "conflict")
             self.assertEqual(file_path.read_text(encoding="utf-8"), "user changed")
@@ -80,7 +85,7 @@ class ApplyRecoverTests(unittest.TestCase):
             target = Path(temp) / "Vault"
             target.mkdir()
             (target / "50_skills").mkdir()
-            plan = self.bootstrap.build_scaffold_plan(target, allow_existing_projection=True)
+            plan = self.scaffold_plan(target, allow_existing_projection=True)
             result = self.bootstrap.apply_scaffold(plan, self.authorization(plan))
             self.assertEqual(result["command_outcome"], "conflict")
             self.assertFalse(any(path.name == "50_Skills" for path in target.iterdir()))
@@ -89,7 +94,7 @@ class ApplyRecoverTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "Vault"
             target.mkdir()
-            plan = self.bootstrap.build_scaffold_plan(target)
+            plan = self.scaffold_plan(target)
             result = self.bootstrap.apply_scaffold(plan, self.authorization(plan), fail_after=2)
             self.assertEqual(result["command_outcome"], "partial")
             self.assertEqual(len(result["completed_operations"]), 2)
@@ -100,7 +105,7 @@ class ApplyRecoverTests(unittest.TestCase):
     def test_missing_target_uses_sibling_staging_and_atomic_rename(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "新 Vault"
-            plan = self.bootstrap.build_scaffold_plan(target)
+            plan = self.scaffold_plan(target)
             result = self.bootstrap.apply_scaffold(plan, self.authorization(plan))
             self.assertEqual(result["command_outcome"], "success")
             self.assertTrue((target / "README.md").is_file())
@@ -109,7 +114,7 @@ class ApplyRecoverTests(unittest.TestCase):
     def test_missing_target_race_keeps_staging_and_never_overwrites_winner(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "竞态 Vault"
-            plan = self.bootstrap.build_scaffold_plan(target)
+            plan = self.scaffold_plan(target)
 
             def win_race() -> None:
                 target.mkdir()
@@ -124,7 +129,7 @@ class ApplyRecoverTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "Vault"
             target.mkdir()
-            plan = self.bootstrap.build_scaffold_plan(target)
+            plan = self.scaffold_plan(target)
             result = self.bootstrap.apply_scaffold(plan, self.authorization(plan))
             changed = target / "README.md"
             changed.write_text("user changed", encoding="utf-8")

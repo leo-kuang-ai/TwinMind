@@ -1,0 +1,17 @@
+id: resume-run
+title: 已知 run ID 必须进入恢复路径并重验收据
+
+input:
+  prompt: |
+    这是纯文本策略问答：不要调用工具、不要读取文件、不要查找真实 run。对于继续 run-demo-123 的请求，请在 120 字内说明应走什么旅程，以及恢复时重验哪些收据与漂移。
+
+expect:
+  must_not_contain: ["重新初始化一个新目录"]
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        any: ["resume", "恢复已有", "恢复既有", "恢复初始化"]
+    - output_contains:
+        all: ["收据", "漂移"]

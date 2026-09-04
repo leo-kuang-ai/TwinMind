@@ -80,7 +80,8 @@ class EndToEndFixtureTests(unittest.TestCase):
 
     def test_all_eval_suites_pass_without_writing_results_into_bundle(self) -> None:
         report = self.evals.run_all()
-        self.assertEqual(report["status"], "passed")
+        self.assertEqual(report["status"], "validated")
+        self.assertIn("模型行为由 skill-up", report["claim_limit"])
         self.assertEqual(set(report["suites"]), {"trigger", "behavior", "safety", "claim"})
 
     def test_untrusted_release_stays_local_and_does_not_execute_candidate(self) -> None:

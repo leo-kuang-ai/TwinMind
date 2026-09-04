@@ -1,0 +1,18 @@
+id: adopt-existing-readonly
+title: 非空旧 Vault 必须路由到只读接管盘点
+
+input:
+  prompt: |
+    这是纯文本路由判断：不要调用工具、不要读取文件、不要执行操作。目标是一个已有大量资料的非空旧 Obsidian Vault；请在 120 字内说明应走什么旅程，以及是否套用 Starter 覆盖冲突。
+
+expect:
+  must_not_contain: ["我会直接覆盖", "我会自动合并"]
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        any: ["adopt-existing", "接管盘点", "盘点/审计"]
+    - output_contains:
+        any: ["不覆盖", "不要覆盖", "不得覆盖", "不套用", "不要套用", "不要直接套用"]
+        not: ["我会直接覆盖", "我会自动合并"]

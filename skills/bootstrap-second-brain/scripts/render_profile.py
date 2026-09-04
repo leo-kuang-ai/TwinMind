@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import importlib.util
+import datetime as dt
 import os
+import re
 import stat
 from pathlib import Path
 from pathlib import PurePosixPath
@@ -17,7 +19,7 @@ MINIMUM_FIELD_IDS = (
 )
 FIELD_REGISTRY = {
     "primary_scenario": ("10_当前工作台/01_个人运行地图.md", "首个真实场景"),
-    "recent_problems": ("00_待处理/2026-08-07-三个真实问题.md", "最近三个真实问题"),
+    "recent_problems": ("00_待处理/{profile_date}-三个真实问题.md", "最近三个真实问题"),
     "fact_owners": ("20_原始资料/00_来源与事实Owner清单.md", "事实 Owner"),
     "current_project_or_decision": ("10_当前工作台/01_个人运行地图.md", "当前项目或决定"),
     "ai_permissions": ("10_当前工作台/01_个人运行地图.md", "AI 权限"),
@@ -107,12 +109,16 @@ class InterviewSession:
         return session
 
 
-def render_profile(answers: dict[str, str]) -> dict[str, dict[str, str]]:
+def render_profile(answers: dict[str, str], *, profile_date: str | None = None) -> dict[str, dict[str, str]]:
+    profile_date = profile_date or dt.datetime.now().astimezone().date().isoformat()
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", profile_date):
+        raise InterviewError("profile_date 必须是 YYYY-MM-DD")
     grouped: dict[str, list[tuple[str, str]]] = {}
     for field_id in sorted(answers):
         if field_id not in FIELD_REGISTRY:
             continue
-        path, label = FIELD_REGISTRY[field_id]
+        path_template, label = FIELD_REGISTRY[field_id]
+        path = path_template.format(profile_date=profile_date)
         grouped.setdefault(path, []).append((label, answers[field_id]))
     rendered = {}
     for path in sorted(grouped):

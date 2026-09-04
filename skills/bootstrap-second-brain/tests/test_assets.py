@@ -26,7 +26,11 @@ TOOLING_ADAPTERS = {
     "30_知识主题/第二大脑完整工具清单.md",
     "30_知识主题/工具选择与升级门禁.md",
 }
-EXCLUDED_SOURCE_PATHS = {"AGENTS.md"}
+EXCLUDED_SOURCE_PATHS = {
+    "AGENTS.md",
+    "99_维护记录/TwinMind Starter 宿主中立化交付记录.md",
+    "99_维护记录/TwinMind第二大脑初始化Skill实施交付记录.md",
+}
 TASK_DEFINITION_PATHS = {
     "60_任务系统/10_任务定义/每日任务规划.md",
     "60_任务系统/10_任务定义/每日总结.md",

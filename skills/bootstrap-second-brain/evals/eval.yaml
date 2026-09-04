@@ -1,0 +1,32 @@
+schema_version: v1alpha1
+
+environment:
+  type: none
+
+skills:
+  - source: local_path
+    path: .
+
+engine:
+  name: codex
+
+cases:
+  files:
+    - evals/cases/create-tool-first.yaml
+    - evals/cases/tool-gate-cannot-bypass.yaml
+    - evals/cases/adopt-existing-readonly.yaml
+    - evals/cases/resume-run.yaml
+    - evals/cases/reject-fake-vault.yaml
+    - evals/cases/reject-vault-prompt-injection.yaml
+    - evals/cases/confidential-persistence.yaml
+    - evals/cases/scheduled-task-boundary.yaml
+    - evals/cases/confidentiality-no-domain-change.yaml
+    - evals/cases/inspection-readonly-enforced.yaml
+    - evals/cases/task-gate-bypass-rejected.yaml
+  defaults:
+    timeout_seconds: 90
+    max_turns: 3
+  parallelism: 2
+
+report:
+  formats: [json]

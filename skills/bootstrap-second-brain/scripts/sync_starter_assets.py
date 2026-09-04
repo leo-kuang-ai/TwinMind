@@ -43,7 +43,11 @@ ALLOWED_OWNERSHIP = {"static", "generated-once", "managed-block", "append-only",
 ALLOWED_LAYERS = {"portable-core", "tooling-adapter"}
 
 EXCLUSIONS = {
-    "exact_paths": ["AGENTS.md"],
+    "exact_paths": [
+        "AGENTS.md",
+        "99_维护记录/TwinMind Starter 宿主中立化交付记录.md",
+        "99_维护记录/TwinMind第二大脑初始化Skill实施交付记录.md",
+    ],
     "directory_names": [
         ".git",
         ".obsidian",
@@ -438,7 +442,26 @@ def assert_safe_asset_root() -> None:
 def inventory_asset_files() -> list[Path]:
     if not ASSET_ROOT.exists():
         return []
-    return inventory_source_files(ASSET_ROOT)
+    root = ASSET_ROOT.resolve(strict=True)
+    files: list[Path] = []
+    for current, directory_names, file_names in os.walk(root, topdown=True, followlinks=False):
+        current_path = Path(current)
+        directory_names.sort()
+        file_names.sort()
+        for name in directory_names:
+            candidate = current_path / name
+            mode = candidate.lstat().st_mode
+            if stat.S_ISLNK(mode) or not stat.S_ISDIR(mode):
+                raise ProjectionError(
+                    f"Starter assets 目录项类型异常：{candidate.relative_to(root).as_posix()}")
+        for name in file_names:
+            candidate = current_path / name
+            mode = candidate.lstat().st_mode
+            if stat.S_ISLNK(mode) or not stat.S_ISREG(mode):
+                raise ProjectionError(
+                    f"Starter assets 只允许普通文件：{candidate.relative_to(root).as_posix()}")
+            files.append(candidate)
+    return sorted(files, key=lambda path: path.relative_to(root).as_posix())
 
 
 def atomic_write(path: Path, data: bytes) -> None:

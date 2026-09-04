@@ -87,8 +87,11 @@ class InterviewRenderTests(unittest.TestCase):
 
     def test_render_is_deterministic_and_generated_once_never_overwrites(self) -> None:
         answers = {field_id: f"值-{field_id}" for field_id in self.render.MINIMUM_FIELD_IDS}
-        first = self.render.render_profile(answers)
-        self.assertEqual(first, self.render.render_profile(dict(reversed(list(answers.items())))))
+        first = self.render.render_profile(answers, profile_date="2026-08-11")
+        self.assertEqual(first, self.render.render_profile(
+            dict(reversed(list(answers.items()))), profile_date="2026-08-11"))
+        self.assertIn("00_待处理/2026-08-11-三个真实问题.md", first)
+        self.assertNotIn("00_待处理/2026-08-07-三个真实问题.md", first)
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp)
             existing = target / "10_当前工作台/01_个人运行地图.md"
@@ -118,13 +121,15 @@ class InterviewRenderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / "Vault"
             target.mkdir()
-            scaffold = module.build_scaffold_plan(target)
+            scaffold = module.build_scaffold_plan(
+                target, module.example_verified_tool_readiness_receipt("run-1"))
             answers = {"primary_scenario": "处理重复评审"}
             first = module.build_personalize_plan("run-1", target, answers)
             second = module.build_personalize_plan("run-1", target, answers)
             self.assertEqual(first, second)
             self.assertNotEqual(first["plan_digest"], scaffold["plan_digest"])
             self.assertEqual(first["plan_stage"], "personalize")
+            self.assertRegex(first["profile_date"], r"^\d{4}-\d{2}-\d{2}$")
 
 
 if __name__ == "__main__":

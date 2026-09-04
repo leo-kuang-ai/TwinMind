@@ -1,0 +1,19 @@
+id: create-tool-first
+title: 新建旅程必须先完成工具准备
+
+input:
+  prompt: |
+    这是纯文本策略问答：不要调用工具、不要读取文件、不要执行操作。请在 120 字内说明：基于 TwinMind Starter 新建第二大脑应从哪一步开始；Git 未验证时是否停止进入 Vault 路径、规划与写入，并返回什么状态。
+
+expect:
+  must_not_contain: ["已经初始化", "已创建完成"]
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        any: ["工具准备", "预检"]
+    - output_contains:
+        all: ["Git"]
+        any: ["停止", "action_required"]
+        not: ["已经初始化", "已创建完成"]

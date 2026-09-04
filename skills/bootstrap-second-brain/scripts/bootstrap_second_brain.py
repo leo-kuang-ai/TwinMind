@@ -138,6 +138,68 @@ def verify_tool_readiness(readiness: dict, choices: dict[str, str]) -> dict:
     return {"command_outcome": "success", "path_confirmation_ready": True, "tools": tools}
 
 
+def build_tool_readiness_receipt(tool_plan: dict, choices: dict[str, str], *,
+                                 run_id: str, verified_at: str | None = None) -> dict:
+    """把成功的工具验证固化为可与后续计划绑定的私有运行收据。"""
+    _validate_run_id(run_id)
+    if (_plan_digest(tool_plan) != tool_plan.get("plan_digest")
+            or tool_plan.get("identity_manifest_digest") != _tool_manifest()["manifest_digest"]):
+        raise VERIFY.SafetyError("tool plan 已漂移")
+    readiness = tool_plan.get("readiness")
+    if not isinstance(readiness, dict) or not isinstance(choices, dict):
+        raise VERIFY.SafetyError("tool readiness 或 choices 形状不安全")
+    verification = verify_tool_readiness(readiness, choices)
+    if verification.get("command_outcome") != "success":
+        raise VERIFY.SafetyError("工具就绪条件尚未满足")
+    return {
+        "schema_version": 1,
+        "run_id": run_id,
+        "tool_plan_digest": tool_plan["plan_digest"],
+        "identity_manifest_digest": tool_plan["identity_manifest_digest"],
+        "readiness": readiness,
+        "readiness_digest": VERIFY.digest_value(readiness),
+        "choices": choices,
+        "choices_digest": VERIFY.digest_value(choices),
+        "verification_digest": VERIFY.digest_value(verification),
+        "verified_at": verified_at or dt.datetime.now(dt.timezone.utc).isoformat(),
+        "command_outcome": "success",
+    }
+
+
+def validate_tool_readiness_receipt(receipt: dict, *, expected_run_id: str | None = None) -> None:
+    required = {
+        "schema_version", "run_id", "tool_plan_digest", "identity_manifest_digest",
+        "readiness", "readiness_digest", "choices", "choices_digest",
+        "verification_digest", "verified_at", "command_outcome",
+    }
+    if set(receipt) != required or receipt.get("schema_version") != 1:
+        raise VERIFY.SafetyError("tool readiness receipt 形状不安全")
+    _validate_run_id(receipt.get("run_id", ""))
+    if expected_run_id is not None and receipt["run_id"] != expected_run_id:
+        raise VERIFY.SafetyError("tool readiness receipt run-id 不匹配")
+    if (receipt.get("command_outcome") != "success"
+            or receipt.get("identity_manifest_digest") != _tool_manifest()["manifest_digest"]
+            or not re.fullmatch(r"[0-9a-f]{64}", receipt.get("tool_plan_digest", ""))
+            or receipt.get("readiness_digest") != VERIFY.digest_value(receipt.get("readiness"))
+            or receipt.get("choices_digest") != VERIFY.digest_value(receipt.get("choices"))):
+        raise VERIFY.SafetyError("tool readiness receipt 已漂移")
+    verification = verify_tool_readiness(receipt["readiness"], receipt["choices"])
+    if (verification.get("command_outcome") != "success"
+            or receipt.get("verification_digest") != VERIFY.digest_value(verification)):
+        raise VERIFY.SafetyError("tool readiness receipt 不再满足就绪条件")
+
+
+def example_verified_tool_readiness_receipt(run_id: str = "run-example") -> dict:
+    """返回遵循正式收据合同的最小示例，供文档与确定性合同测试复用。"""
+    readiness = example_missing_recommended_readiness()
+    return build_tool_readiness_receipt(
+        build_tool_plan(readiness),
+        {"workbuddy": "deferred_by_user", "obsidian": "deferred_by_user"},
+        run_id=run_id,
+        verified_at="2000-01-01T00:00:00+00:00",
+    )
+
+
 def tool_probe_vault(target: Path, *, selected_target: Path | None) -> dict:
     if selected_target is None:
         raise VERIFY.SafetyError("vault scope 需要用户已选择目标")
@@ -396,7 +458,11 @@ def _plan_digest(plan: dict) -> str:
     return VERIFY.digest_value(core)
 
 
-def build_scaffold_plan(target: Path, allow_existing_projection: bool = False) -> dict:
+def build_scaffold_plan(target: Path, tool_readiness_receipt: dict | None = None,
+                        allow_existing_projection: bool = False) -> dict:
+    if tool_readiness_receipt is None:
+        raise VERIFY.SafetyError("scaffold 需要已持久化并验证的 tool readiness receipt")
+    validate_tool_readiness_receipt(tool_readiness_receipt)
     probe = VERIFY.probe_target(target)
     if probe["shape"] == "nonempty" and not allow_existing_projection:
         raise VERIFY.SafetyError("非空目标不得进入 scaffold")
@@ -418,6 +484,8 @@ def build_scaffold_plan(target: Path, allow_existing_projection: bool = False) -
         "normalized_path": probe["normalized_path"],
         "probe_snapshot_digest": probe["snapshot_digest"],
         "starter_manifest_digest": VERIFY.digest_value(manifest),
+        "tool_readiness_receipt_digest": VERIFY.digest_value(tool_readiness_receipt),
+        "tool_readiness_digest": tool_readiness_receipt["readiness_digest"],
         "operations": operations,
     }
     plan["plan_digest"] = _plan_digest(plan)
@@ -452,6 +520,191 @@ def _authorization_valid(plan: dict, authorization: dict | None) -> bool:
 
 def _sha256(path: Path) -> str:
     return VERIFY._sha256_file(path)
+
+
+def _vault_regular_file(target: Path, relative_path: str) -> Path:
+    relative = PurePosixPath(relative_path)
+    if (not relative_path or relative.is_absolute() or ".." in relative.parts
+            or relative.as_posix() != relative_path or "\\" in relative_path):
+        raise VERIFY.SafetyError("Vault 相对路径不安全")
+    current = VERIFY.normalize_target_path(target)
+    for index, part in enumerate(relative.parts):
+        current = current / part
+        info = current.lstat()
+        if stat.S_ISLNK(info.st_mode):
+            raise VERIFY.SafetyError("Vault 路径组件不得是 symlink")
+        is_last = index == len(relative.parts) - 1
+        if not is_last and not stat.S_ISDIR(info.st_mode):
+            raise VERIFY.SafetyError("Vault 中间路径必须是目录")
+        if is_last and (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1):
+            raise VERIFY.SafetyError("Vault 证据必须是单链接普通文件")
+    return current
+
+
+def _managed_block_valid(candidate: bytes, canonical: bytes) -> bool:
+    marker_pattern = re.compile(
+        rb"<!-- TWINMIND_MANAGED_(START|END):([a-z0-9-]+) -->")
+    canonical_markers = marker_pattern.findall(canonical)
+    candidate_markers = marker_pattern.findall(candidate)
+    if len(canonical_markers) != 2 or canonical_markers[0][0] != b"START":
+        raise VERIFY.SafetyError("canonical managed block 标记异常")
+    if canonical_markers[1] != (b"END", canonical_markers[0][1]):
+        raise VERIFY.SafetyError("canonical managed block 未成对")
+    return candidate_markers == canonical_markers
+
+
+def verify_starter_projection(target: Path) -> tuple[list[str], list[str]]:
+    """按 Starter ownership 验证当前 Vault，不把用户可编辑内容误判为漂移。"""
+    issues: list[str] = []
+    evidence: list[str] = []
+    for entry in _starter_manifest()["files"]:
+        relative = entry["path"]
+        try:
+            candidate = _vault_regular_file(target, relative)
+        except FileNotFoundError:
+            issues.append(f"starter_missing:{relative}")
+            continue
+        except (OSError, VERIFY.SafetyError):
+            issues.append(f"starter_unsafe:{relative}")
+            continue
+        try:
+            data = VERIFY.read_regular_bytes(candidate)
+        except (OSError, VERIFY.SafetyError):
+            issues.append(f"starter_unsafe:{relative}")
+            continue
+        ownership = entry["ownership"]
+        if ownership == "static" and hashlib.sha256(data).hexdigest() != entry["sha256"]:
+            issues.append(f"static_drift:{relative}")
+        elif ownership == "managed-block":
+            source = ASSET_ROOT / relative
+            try:
+                canonical = VERIFY.read_regular_bytes(source)
+            except (OSError, VERIFY.SafetyError):
+                raise VERIFY.SafetyError(f"Starter source 不可读：{relative}")
+            if not _managed_block_valid(data, canonical):
+                issues.append(f"managed_block_invalid:{relative}")
+    if not issues:
+        evidence.append("starter_projection:verified")
+    return issues, evidence
+
+
+def _git_blob_bytes(git_executable: str, repo: Path, revision_path: str) -> bytes | None:
+    command_env = os.environ.copy()
+    command_env.update({"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull,
+                        "GIT_ATTR_NOSYSTEM": "1", "GIT_TERMINAL_PROMPT": "0"})
+    result = subprocess.run(
+        [git_executable, "show", revision_path], cwd=repo, env=command_env,
+        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=False)
+    return result.stdout if result.returncode == 0 else None
+
+
+def verify_git_baseline(target: Path, git_executable: str) -> tuple[dict | None, list[str], list[str]]:
+    issues: list[str] = []
+    evidence: list[str] = []
+    boundary = inspect_git_boundary(target, git_executable)
+    if boundary["kind"] == "none":
+        return None, ["git_baseline_missing"], evidence
+    repo = Path(boundary["repository_root"])
+    head = _git(git_executable, repo, "rev-parse", "--verify", "HEAD")
+    oid = head.stdout.strip()
+    if head.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40}", oid):
+        return None, ["git_baseline_missing"], evidence
+    try:
+        prefix = target.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        return None, ["git_boundary_mismatch"], evidence
+    for entry in _starter_manifest()["files"]:
+        git_path = entry["path"] if prefix == "." else f"{prefix}/{entry['path']}"
+        data = _git_blob_bytes(git_executable, repo, f"HEAD:{git_path}")
+        if data is None:
+            issues.append(f"baseline_missing:{entry['path']}")
+            continue
+        if entry["ownership"] == "static" and hashlib.sha256(data).hexdigest() != entry["sha256"]:
+            issues.append(f"baseline_static_drift:{entry['path']}")
+        elif entry["ownership"] == "managed-block":
+            canonical = VERIFY.read_regular_bytes(ASSET_ROOT / entry["path"])
+            if not _managed_block_valid(data, canonical):
+                issues.append(f"baseline_managed_block_invalid:{entry['path']}")
+    boundary_digest = VERIFY.digest_value(boundary)
+    if not issues:
+        evidence.extend(["git_baseline:verified", f"baseline_commit:{oid}"])
+    return {
+        "repository_boundary_digest": boundary_digest,
+        "baseline_commit_oid": oid,
+        "baseline_tree_verified": not issues,
+    }, issues, evidence
+
+
+def validate_activation_evidence(target: Path, evidence_paths: list[str]) -> list[str]:
+    """验证激活证据仍是当前 Vault 内的普通文件。"""
+    validated: list[str] = []
+    for raw in evidence_paths:
+        if not isinstance(raw, str):
+            raise VERIFY.SafetyError("activation evidence 必须是 Vault 相对路径")
+        try:
+            _vault_regular_file(target, raw)
+        except (OSError, VERIFY.SafetyError) as error:
+            raise VERIFY.SafetyError("activation evidence 必须是目标内普通文件") from error
+        validated.append(raw)
+    return validated
+
+
+def verify_bootstrap_result(target: Path, *, run_id: str, journey: str,
+                            activation_evidence: list[str],
+                            activation_confirmation_source: str | None,
+                            activation_checklist_complete: bool,
+                            git_executable: str | None = None) -> dict:
+    activation_evidence = validate_activation_evidence(target, activation_evidence)
+    probe = VERIFY.probe_target(target)
+    inventory = VERIFY.inventory_vault(target)
+    issues, evidence = verify_starter_projection(target)
+    git_result = None
+    if git_executable:
+        git_result, git_issues, git_evidence = verify_git_baseline(target, git_executable)
+        issues.extend(git_issues)
+        evidence.extend(git_evidence)
+    else:
+        issues.append("git_executable_missing")
+    if inventory["inventory_status"] == "incomplete":
+        issues.append(f"inventory_incomplete:{inventory['limit_hit']}")
+    evidence.extend(issues)
+    initialized = not issues and git_result is not None and git_result["baseline_tree_verified"]
+    activation_requested = bool(
+        activation_evidence or activation_confirmation_source or activation_checklist_complete)
+    activation_complete = bool(
+        initialized and activation_evidence and activation_confirmation_source
+        and activation_checklist_complete)
+    if activation_requested and not activation_complete:
+        evidence.append("activation:explicit_confirmation_incomplete")
+    lifecycle = "activated" if activation_complete else ("initialized" if initialized else "new")
+    result = {
+        "schema_version": 1,
+        "run_id": run_id,
+        "journey": journey,
+        "phase": "activate" if activation_requested else "verify",
+        "lifecycle_state": lifecycle,
+        "run_state": "completed" if initialized else "paused",
+        "health": "healthy" if initialized else "degraded",
+        "command_outcome": "success" if initialized else "action_required",
+        "evidence": evidence,
+        "inventory": {
+            "policy_id": inventory["policy_id"],
+            "policy_digest": inventory["policy_digest"],
+            "inventory_status": inventory["inventory_status"],
+            "limit_hit": inventory["limit_hit"],
+        },
+    }
+    if git_result is not None:
+        result["git"] = git_result
+    if activation_complete:
+        result["activation"] = {
+            "user_confirmation_source": activation_confirmation_source,
+            "checklist_complete": True,
+            "evidence_paths": activation_evidence,
+        }
+    _load_contract_module().validate_contract("bootstrap-result", result)
+    return result
 
 
 def _safe_parent(target: Path, relative_path: str) -> Path:
@@ -622,7 +875,8 @@ def build_host_tool_plan(tool_id: str, identity_digest: str, action: str, value:
 
 
 def build_personalize_plan(run_id: str, target: Path, confirmed_answers: dict[str, str],
-                           state_storage: dict | None = None) -> dict:
+                           state_storage: dict | None = None,
+                           profile_date: str | None = None) -> dict:
     render_path = Path(__file__).with_name("render_profile.py")
     spec = importlib.util.spec_from_file_location("bootstrap_render_profile", render_path)
     if spec is None or spec.loader is None:
@@ -630,7 +884,8 @@ def build_personalize_plan(run_id: str, target: Path, confirmed_answers: dict[st
     renderer = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(renderer)
     probe = VERIFY.probe_target(target)
-    rendered = renderer.render_profile(confirmed_answers)
+    profile_date = profile_date or dt.datetime.now().astimezone().date().isoformat()
+    rendered = renderer.render_profile(confirmed_answers, profile_date=profile_date)
     operations = [{"operation_id": f"personalize:{path}", "kind": "render-profile",
                    "relative_path": path, "content_digest": VERIFY.digest_value(entry["content"])}
                   for path, entry in sorted(rendered.items())]
@@ -639,6 +894,7 @@ def build_personalize_plan(run_id: str, target: Path, confirmed_answers: dict[st
             "target_identity_digest": probe["identity_digest"],
             "normalized_path": probe["normalized_path"],
             "probe_snapshot_digest": probe["snapshot_digest"], "answers_digest": VERIFY.digest_value(confirmed_answers),
+            "profile_date": profile_date,
             "operations": operations}
     if state_storage is not None:
         binding = {
@@ -1012,6 +1268,8 @@ def parser() -> argparse.ArgumentParser:
     tool_verify = commands.add_parser("tool-verify")
     tool_verify.add_argument("--plan", required=True)
     tool_verify.add_argument("--choices")
+    tool_verify.add_argument("--run-id", required=True)
+    tool_verify.add_argument("--state-dir", required=True)
     _json_argument(tool_verify)
 
     probe = commands.add_parser("probe")
@@ -1050,7 +1308,13 @@ def parser() -> argparse.ArgumentParser:
 
     verify = commands.add_parser("verify")
     verify.add_argument("--target", required=True)
+    verify.add_argument("--run-id")
+    verify.add_argument("--journey", choices=("create", "verify", "adopt-existing"), default="verify")
+    verify.add_argument("--git-executable")
     verify.add_argument("--activation-evidence", action="append", default=[])
+    verify.add_argument("--activation-confirmation-source")
+    verify.add_argument("--activation-checklist-complete", action="store_true")
+    _state_argument(verify)
     _json_argument(verify)
 
     resume = commands.add_parser("resume")
@@ -1185,7 +1449,15 @@ def execute(args: argparse.Namespace) -> dict:
         if not isinstance(readiness, dict):
             raise VERIFY.SafetyError("tool plan 缺少 readiness")
         choices = _read_json_input(args.choices) if args.choices else {}
-        return verify_tool_readiness(readiness, choices)
+        result = verify_tool_readiness(readiness, choices)
+        if result.get("command_outcome") != "success":
+            return result
+        receipt = build_tool_readiness_receipt(plan, choices, run_id=args.run_id)
+        run_root = _run_state_root(_state_dir(args.state_dir), args.run_id)
+        VERIFY.write_private_json(
+            run_root, "tool-readiness-receipt.json", receipt, None)
+        return {**result, "run_id": args.run_id,
+                "tool_readiness_receipt_digest": VERIFY.digest_value(receipt)}
     if args.command == "probe":
         return {"command_outcome": "success", "probe": VERIFY.probe_target(args.target)}
     if args.command == "authorize":
@@ -1229,16 +1501,36 @@ def execute(args: argparse.Namespace) -> dict:
         _load_contract_module().validate_authorization_binding(plan, authorization)
         kinds = {operation["kind"] for operation in plan.get("operations", [])}
         if kinds == {"copy-starter"}:
+            if not plan.get("run_id"):
+                return {"command_outcome": "action_required",
+                        "reason": "scaffold apply 缺少 run-id"}
+            try:
+                run_root = _existing_run_state_root(_state_dir(args.state_dir), plan["run_id"])
+                readiness_receipt = _read_private_json(run_root / "tool-readiness-receipt.json")
+                validate_tool_readiness_receipt(
+                    readiness_receipt, expected_run_id=plan["run_id"])
+            except FileNotFoundError:
+                return {"command_outcome": "plan_stale",
+                        "reason": "tool readiness receipt 不存在"}
+            except VERIFY.SafetyError as error:
+                return {"command_outcome": "plan_stale", "reason": str(error)}
+            if (plan.get("tool_readiness_receipt_digest") != VERIFY.digest_value(readiness_receipt)
+                    or plan.get("tool_readiness_digest") != readiness_receipt["readiness_digest"]):
+                return {"command_outcome": "plan_stale",
+                        "reason": "tool readiness receipt 与 scaffold plan 绑定不一致"}
             result = apply_scaffold(plan, authorization)
             if plan.get("run_id") and result.get("created_files"):
                 run_root = _run_state_root(_state_dir(args.state_dir), plan["run_id"])
                 recovery_target = result.get("staging_path") or plan["normalized_path"]
                 receipt_probe = VERIFY.probe_target(recovery_target)
                 VERIFY.write_private_json(run_root, "scaffold-receipt.json", {
+                    "schema_version": 1,
+                    "run_id": plan["run_id"],
                     "target": recovery_target,
                     "requested_target": plan["normalized_path"],
                     "target_identity_digest": receipt_probe["identity_digest"],
                     "starter_manifest_digest": plan["starter_manifest_digest"],
+                    "tool_readiness_receipt_digest": plan["tool_readiness_receipt_digest"],
                     "apply_outcome": result["command_outcome"],
                     "created_files": result["created_files"],
                 },
@@ -1288,8 +1580,13 @@ def execute(args: argparse.Namespace) -> dict:
                 return {"command_outcome": "action_required", "reason": "personalize apply 需要 --input 或 --state-dir"}
             if VERIFY.digest_value(answers) != plan.get("answers_digest"):
                 return {"command_outcome": "plan_stale"}
+            profile_date = plan.get("profile_date")
+            if (not isinstance(profile_date, str)
+                    or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", profile_date)):
+                return {"command_outcome": "plan_stale",
+                        "reason": "personalize plan 缺少固定 profile_date"}
             renderer = _load_render_module()
-            rendered = renderer.render_profile(answers)
+            rendered = renderer.render_profile(answers, profile_date=profile_date)
             expected_operations = [{
                 "operation_id": f"personalize:{path}",
                 "kind": "render-profile",
@@ -1298,8 +1595,22 @@ def execute(args: argparse.Namespace) -> dict:
             } for path, entry in sorted(rendered.items())]
             if plan.get("operations") != expected_operations:
                 return {"command_outcome": "plan_stale"}
-            return {"command_outcome": "success", **renderer.apply_rendered_profile(
+            result = {"command_outcome": "success", **renderer.apply_rendered_profile(
                 Path(plan["normalized_path"]), rendered)}
+            if plan.get("run_id"):
+                run_root = _run_state_root(_state_dir(args.state_dir), plan["run_id"])
+                current = VERIFY.probe_target(plan["normalized_path"])
+                VERIFY.write_private_json(run_root, "personalize-receipt.json", {
+                    "schema_version": 1,
+                    "run_id": plan["run_id"],
+                    "target": plan["normalized_path"],
+                    "target_identity_digest": current["identity_digest"],
+                    "plan_digest": plan["plan_digest"],
+                    "answers_digest": plan["answers_digest"],
+                    "operations_digest": VERIFY.digest_value(plan["operations"]),
+                    "apply_outcome": result["command_outcome"],
+                }, Path(plan["normalized_path"]))
+            return result
         git_kinds = {"git-init", "git-local-identity", "git-add", "git-baseline-commit"}
         if kinds and kinds <= git_kinds:
             identity = None
@@ -1308,7 +1619,22 @@ def execute(args: argparse.Namespace) -> dict:
                 if set(identity_payload) != {"name", "email"}:
                     raise VERIFY.SafetyError("Git local identity 输入只允许 name/email")
                 identity = (identity_payload["name"], identity_payload["email"])
-            return apply_git_baseline(plan, authorization, local_identity=identity)
+            result = apply_git_baseline(plan, authorization, local_identity=identity)
+            if plan.get("run_id") and result.get("lifecycle_state") == "initialized":
+                run_root = _run_state_root(_state_dir(args.state_dir), plan["run_id"])
+                current = VERIFY.probe_target(plan["normalized_path"])
+                VERIFY.write_private_json(run_root, "environment-receipt.json", {
+                    "schema_version": 1,
+                    "run_id": plan["run_id"],
+                    "target": plan["normalized_path"],
+                    "target_identity_digest": current["identity_digest"],
+                    "plan_digest": plan["plan_digest"],
+                    "baseline_commit_oid": result["baseline_commit_oid"],
+                    "repository_boundary_digest": result["repository_boundary_digest"],
+                    "baseline_tree_verified": result["baseline_tree_verified"],
+                    "apply_outcome": result["command_outcome"],
+                }, Path(plan["normalized_path"]))
+            return result
         if kinds in ({"open-source"}, {"open-app"}):
             return apply_host_tool(plan, authorization, _execute_macos_open)
         return {"command_outcome": "action_required", "reason": "该 plan kind 需要宿主 adapter 执行"}
@@ -1316,40 +1642,82 @@ def execute(args: argparse.Namespace) -> dict:
         probe = VERIFY.probe_target(args.target)
         if probe["shape"] == "missing":
             raise VERIFY.SafetyError("verify 目标不存在")
-        evidence = []
-        for raw in args.activation_evidence:
-            relative = PurePosixPath(raw)
-            if relative.is_absolute() or ".." in relative.parts or relative.as_posix() != raw:
-                raise VERIFY.SafetyError("activation evidence 必须是 Vault 相对路径")
-            candidate = Path(args.target) / raw
-            if candidate.is_symlink() or not candidate.is_file():
-                raise VERIFY.SafetyError("activation evidence 必须是目标内普通文件")
-            evidence.append(raw)
-        return {"command_outcome": "success", "probe": probe,
-                "inventory": VERIFY.inventory_vault(Path(args.target)), "activation_evidence": evidence}
+        evidence = validate_activation_evidence(Path(args.target), args.activation_evidence)
+        run_id = args.run_id or f"run-{probe['identity_digest'][:16]}"
+        _validate_run_id(run_id)
+        result = verify_bootstrap_result(
+            Path(args.target), run_id=run_id, journey=args.journey,
+            activation_evidence=evidence,
+            activation_confirmation_source=args.activation_confirmation_source,
+            activation_checklist_complete=args.activation_checklist_complete,
+            git_executable=args.git_executable or shutil.which("git"))
+        if args.journey == "create":
+            if not args.state_dir:
+                return {**result, "command_outcome": "action_required",
+                        "run_state": "paused", "health": "degraded",
+                        "evidence": [*result["evidence"], "state_dir:explicit_path_required"]}
+            run_root = _run_state_root(_state_dir(args.state_dir), run_id)
+            receipt = {
+                "schema_version": 1,
+                "run_id": run_id,
+                "target": str(VERIFY.normalize_target_path(args.target)),
+                "target_identity_digest": probe["identity_digest"],
+                "result": result,
+                "result_digest": VERIFY.digest_value(result),
+                "verified_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            }
+            VERIFY.write_private_json(
+                run_root, "verify-receipt.json", receipt, Path(args.target))
+            VERIFY.write_private_json(
+                run_root, "final-result.json", result, Path(args.target))
+        return result
     if args.command == "resume":
         try:
             run_root = _existing_run_state_root(_state_dir(args.state_dir), args.run_id)
         except FileNotFoundError:
             return {"command_outcome": "action_required", "reason": "未知或不可恢复的 run"}
-        result = {"command_outcome": "success", "run_id": args.run_id, "phase": "tool_prepare"}
+        result = {"command_outcome": "success", "run_id": args.run_id,
+                  "phase": "tool_prepare", "lifecycle_state": "planned"}
+        recovered = False
+        try:
+            readiness_receipt = _read_private_json(run_root / "tool-readiness-receipt.json")
+        except FileNotFoundError:
+            readiness_receipt = None
+        if readiness_receipt is not None:
+            try:
+                validate_tool_readiness_receipt(
+                    readiness_receipt, expected_run_id=args.run_id)
+            except VERIFY.SafetyError as error:
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": str(error)}
+            result["tool_readiness_receipt_digest"] = VERIFY.digest_value(readiness_receipt)
+            recovered = True
         try:
             choices = _read_private_json(run_root / "tool-choices.json")
         except FileNotFoundError:
             choices = None
         if choices is not None:
             result["tool_choices"] = choices.get("choices", {})
+            recovered = True
         try:
             evidence = _read_private_json(run_root / "tool-evidence.json")
         except FileNotFoundError:
             evidence = None
         if evidence is not None:
             result["tool_evidence"] = evidence.get("observations", [])
+            recovered = True
         try:
             scaffold = _read_private_json(run_root / "scaffold-receipt.json")
         except FileNotFoundError:
             scaffold = None
         if scaffold is not None:
+            if (scaffold.get("schema_version") != 1
+                    or scaffold.get("run_id") != args.run_id
+                    or readiness_receipt is None
+                    or scaffold.get("tool_readiness_receipt_digest")
+                    != VERIFY.digest_value(readiness_receipt)):
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": "scaffold receipt 与 tool readiness receipt 绑定不一致"}
             current = VERIFY.probe_target(scaffold["target"])
             if (current["identity_digest"] != scaffold.get("target_identity_digest")
                     or VERIFY.digest_value(_starter_manifest()) != scaffold.get("starter_manifest_digest")):
@@ -1362,25 +1730,122 @@ def execute(args: argparse.Namespace) -> dict:
                         or relative.as_posix() != raw or "\\" in raw):
                     return {"command_outcome": "plan_stale", "run_id": args.run_id,
                             "reason": "scaffold receipt 路径不安全"}
-                candidate = Path(scaffold["target"]) / raw
-                if candidate.is_symlink() or not candidate.is_file():
+                try:
+                    candidate = _vault_regular_file(Path(scaffold["target"]), raw)
+                except (OSError, VERIFY.SafetyError):
                     return {"command_outcome": "plan_stale", "run_id": args.run_id,
                             "reason": "scaffold 文件缺失或身份漂移"}
-                if item.get("ownership") != "append-only" and _sha256(candidate) != item.get("sha256"):
+                ownership = item.get("ownership")
+                if ownership == "static" and _sha256(candidate) != item.get("sha256"):
                     return {"command_outcome": "plan_stale", "run_id": args.run_id,
-                            "reason": "scaffold 文件内容漂移"}
-            result.update({"phase": "scaffold", "probe": current,
-                           "scaffold_outcome": scaffold.get("apply_outcome")})
+                            "reason": "scaffold static 文件内容漂移"}
+                if ownership == "managed-block":
+                    canonical = VERIFY.read_regular_bytes(ASSET_ROOT / raw)
+                    if not _managed_block_valid(VERIFY.read_regular_bytes(candidate), canonical):
+                        return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                                "reason": "scaffold managed block 漂移"}
+            if scaffold.get("apply_outcome") != "success":
+                return {"command_outcome": "action_required", "run_id": args.run_id,
+                        "phase": "scaffold", "lifecycle_state": "planned",
+                        "reason": "scaffold 尚未完整应用",
+                        "scaffold_outcome": scaffold.get("apply_outcome")}
+            result.update({"phase": "scaffold", "lifecycle_state": "scaffolded",
+                           "probe": current, "scaffold_outcome": scaffold.get("apply_outcome")})
+            recovered = True
         try:
             stored = _read_private_json(run_root / "interview.json")
         except FileNotFoundError:
             stored = None
         if stored is not None:
             current = VERIFY.probe_target(stored["target"])
-            result.update({"phase": "personalize", "probe": current,
+            result.update({"phase": "discover", "probe": current,
                            "interview": _load_render_module().InterviewSession.resume(
                                args.run_id, stored.get("interview", {})).public_state()})
-        if len(result) == 3:
+            recovered = True
+        try:
+            personalized = _read_private_json(run_root / "personalize-receipt.json")
+        except FileNotFoundError:
+            personalized = None
+        if personalized is not None:
+            if (personalized.get("run_id") != args.run_id
+                    or personalized.get("apply_outcome") != "success"):
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": "personalize receipt 形状或结果异常"}
+            current = VERIFY.probe_target(personalized["target"])
+            if current["identity_digest"] != personalized.get("target_identity_digest"):
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": "personalize target identity 已漂移"}
+            result.update({"phase": "personalize", "lifecycle_state": "personalized",
+                           "probe": current, "personalize_outcome": personalized["apply_outcome"]})
+            recovered = True
+        try:
+            environment = _read_private_json(run_root / "environment-receipt.json")
+        except FileNotFoundError:
+            environment = None
+        if environment is not None:
+            target = Path(environment["target"])
+            current = VERIFY.probe_target(target)
+            git_executable = shutil.which("git")
+            if (environment.get("run_id") != args.run_id or not git_executable
+                    or current["identity_digest"] != environment.get("target_identity_digest")):
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": "environment receipt 或 target identity 已漂移"}
+            git_result, git_issues, _ = verify_git_baseline(target, git_executable)
+            boundary = inspect_git_boundary(target, git_executable)
+            repo = Path(boundary["repository_root"]) if boundary.get("repository_root") else target
+            baseline_exists = _git(
+                git_executable, repo, "cat-file", "-e",
+                f"{environment.get('baseline_commit_oid', '')}^{{commit}}").returncode == 0
+            if (git_issues or git_result is None or not baseline_exists
+                    or VERIFY.digest_value(boundary) != environment.get("repository_boundary_digest")):
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": "Git baseline 或仓库边界已漂移"}
+            result.update({"phase": "environment", "lifecycle_state": "initialized",
+                           "git": git_result, "probe": current})
+            recovered = True
+        try:
+            verify_receipt = _read_private_json(run_root / "verify-receipt.json")
+            final_result = _read_private_json(run_root / "final-result.json")
+        except FileNotFoundError:
+            verify_receipt = None
+            final_result = None
+        if verify_receipt is not None or final_result is not None:
+            if (verify_receipt is None or final_result is None
+                    or verify_receipt.get("run_id") != args.run_id
+                    or verify_receipt.get("result_digest") != VERIFY.digest_value(final_result)
+                    or verify_receipt.get("result") != final_result):
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": "verify receipt 与 final result 不一致"}
+            try:
+                _load_contract_module().validate_contract("bootstrap-result", final_result)
+            except Exception as error:
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": f"final result 合同失效：{error}"}
+            activation = final_result.get("activation", {})
+            verify_target = Path(verify_receipt["target"])
+            current = VERIFY.probe_target(verify_target)
+            if current["identity_digest"] != verify_receipt.get("target_identity_digest"):
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": "verify target identity 已漂移"}
+            try:
+                refreshed = verify_bootstrap_result(
+                    verify_target, run_id=args.run_id,
+                    journey=final_result["journey"],
+                    activation_evidence=activation.get("evidence_paths", []),
+                    activation_confirmation_source=activation.get("user_confirmation_source"),
+                    activation_checklist_complete=activation.get("checklist_complete", False),
+                    git_executable=shutil.which("git"))
+            except (OSError, VERIFY.SafetyError) as error:
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": f"verify 证据已漂移：{error}"}
+            if refreshed["command_outcome"] != "success":
+                return {"command_outcome": "plan_stale", "run_id": args.run_id,
+                        "reason": "verify 后 Vault 语义证据已漂移", "verification": refreshed}
+            result.update({"phase": refreshed["phase"],
+                           "lifecycle_state": refreshed["lifecycle_state"],
+                           "verification": refreshed})
+            recovered = True
+        if not recovered:
             return {"command_outcome": "action_required", "run_id": args.run_id,
                     "reason": "run state 不含可恢复内容"}
         return result
@@ -1476,8 +1941,18 @@ def execute(args: argparse.Namespace) -> dict:
     if args.journey == "create":
         run_id = args.run_id or f"run-{probe['identity_digest'][:16]}"
         if args.stage == "scaffold":
+            try:
+                run_root = _existing_run_state_root(_state_dir(args.state_dir), run_id)
+                readiness_receipt = _read_private_json(run_root / "tool-readiness-receipt.json")
+                validate_tool_readiness_receipt(readiness_receipt, expected_run_id=run_id)
+            except FileNotFoundError:
+                return {"command_outcome": "action_required",
+                        "reason": "请先完成 tool-verify 并持久化就绪收据"}
+            except VERIFY.SafetyError as error:
+                return {"command_outcome": "plan_stale", "reason": str(error)}
             return {"command_outcome": "success", "plan": _plan_with_context(
-                build_scaffold_plan(Path(target_argument)), run_id=run_id, journey="create", stage="scaffold")}
+                build_scaffold_plan(Path(target_argument), readiness_receipt),
+                run_id=run_id, journey="create", stage="scaffold")}
         if args.stage == "personalize":
             state_storage = None
             if args.input:
