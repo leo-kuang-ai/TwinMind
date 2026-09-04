@@ -31,6 +31,21 @@ def load_verify_module():
 
 
 VERIFY = load_verify_module()
+_MANAGED_BLOCKS = None
+
+
+def load_managed_blocks_module():
+    """加载共享 managed-block 标记模块（标记语法唯一事实源）。"""
+    global _MANAGED_BLOCKS
+    if _MANAGED_BLOCKS is None:
+        path = Path(__file__).resolve().with_name("managed_blocks.py")
+        spec = importlib.util.spec_from_file_location("twinmind_managed_blocks", path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError("无法加载 managed_blocks.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _MANAGED_BLOCKS = module
+    return _MANAGED_BLOCKS
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 ASSET_ROOT = SKILL_ROOT / "assets" / "starter-kit"
 STARTER_MANIFEST_PATH = SKILL_ROOT / "manifests" / "starter-v1.json"
@@ -542,8 +557,7 @@ def _vault_regular_file(target: Path, relative_path: str) -> Path:
 
 
 def _managed_block_valid(candidate: bytes, canonical: bytes) -> bool:
-    marker_pattern = re.compile(
-        rb"<!-- TWINMIND_MANAGED_(START|END):([a-z0-9-]+) -->")
+    marker_pattern = load_managed_blocks_module().MARKER_PATTERN_BYTES
     canonical_markers = marker_pattern.findall(canonical)
     candidate_markers = marker_pattern.findall(candidate)
     if len(canonical_markers) != 2 or canonical_markers[0][0] != b"START":

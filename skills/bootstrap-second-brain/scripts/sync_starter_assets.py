@@ -89,9 +89,26 @@ EXPECTED_ON_LIMIT = {
     "command_outcome": "action_required",
 }
 
-MARKER_PATTERN = re.compile(
-    r"<!-- TWINMIND_MANAGED_(START|END):([a-z0-9-]+) -->"
-)
+_MANAGED_BLOCKS = None
+
+
+def load_managed_blocks_module():
+    """加载共享 managed-block 标记模块（标记语法唯一事实源；校验语义仍在本文件）。"""
+    global _MANAGED_BLOCKS
+    if _MANAGED_BLOCKS is None:
+        import importlib.util
+
+        path = Path(__file__).resolve().with_name("managed_blocks.py")
+        spec = importlib.util.spec_from_file_location("twinmind_managed_blocks", path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError("无法加载 managed_blocks.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _MANAGED_BLOCKS = module
+    return _MANAGED_BLOCKS
+
+
+MARKER_PATTERN = load_managed_blocks_module().MARKER_PATTERN_STR
 TOOL_ROWS = {
     "Python 3.11+": "runtime-required",
     "Git": "product-required",

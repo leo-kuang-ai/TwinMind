@@ -3,8 +3,8 @@
   "starter_version": "0.2.0",
   "source": {
     "root": "我的第二大脑",
-    "commit": "997f11d84a2cfeb43fe97fd3790c1210b30ecb9c",
-    "tree_digest": "e276a56c39c8d88825270abe2fb0838d998df6e9fcd1eb0804bbb7b64e857e19"
+    "commit": "7283946cf9a77a7439acf85ac3c1cf1aeae86902",
+    "tree_digest": "7ebdab0998c23e1d4dd27d3ad0272d3e8a57536aa2da908be07497267a6e0387"
   },
   "projection": {
     "root": "assets/starter-kit",
@@ -303,7 +303,7 @@
       "path": "README.md",
       "ownership": "static",
       "layer": "portable-core",
-      "sha256": "4cda00e9d6ab0106e55d6762c58cab49205950f0dc6d08c3434442e543572aff"
+      "sha256": "47fa7eba21a1db341ee6943f482567e8b7b4c27904e30d7027752ef092504227"
     },
     {
       "path": "加载清单.md",
