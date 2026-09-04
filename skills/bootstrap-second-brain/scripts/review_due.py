@@ -4,6 +4,7 @@
 只读契约：不写入 Vault 内外任何文件；stdlib-only；建议以 -I -S -E 隔离调用。
 用法：python3 -I -S -E review_due.py <vault-root> [--json]
 退出码：0 正常（含零到期项与单文件跳过）；2 参数/路径/预算错误。
+结果为扫描时点近似：扫描间隙发生的变化不重试、不标记。
 预算说明：本脚本预算独立于 manifests/inventory-policies-v1.json（10GiB/600s）并刻意更紧
 ——巡检只需读取 frontmatter（每页至多 64KiB），不放宽；如需调整，以 inventory policy 为上限。
 """
@@ -102,9 +103,16 @@ def _parse_review_at(frontmatter: str) -> str | None:
 
 
 def _read_frontmatter_bounded(path: Path) -> tuple[str, int]:
-    """O_NOFOLLOW 有界读取：只读解析所需头部字节，返回 (文本, 实读字节数)。"""
-    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    """O_NOFOLLOW+O_NONBLOCK 有界读取：只读解析所需头部字节，返回 (文本, 实读字节数)。
+
+    非 regular 文件（FIFO/设备等）抛 TypeError 由调用方按不可读跳过，
+    避免 open 在特殊文件上无限阻塞。
+    """
+    import stat
+    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
     try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise TypeError("非普通文件")
         raw = os.read(fd, READ_CHUNK)
     finally:
         os.close(fd)
@@ -120,7 +128,12 @@ def collect_due_pages(root: Path, today: str | None = None) -> dict:
     scanned_files = 0
     bytes_read = 0
     started = time.monotonic()
-    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+    skipped_dirs: list[str] = []
+
+    def _walk_error(error: OSError) -> None:
+        skipped_dirs.append(getattr(error, "filename", str(error)))
+
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False, onerror=_walk_error):
         dirnames[:] = sorted(name for name in dirnames if not (Path(dirpath) / name).is_symlink())
         for name in sorted(filenames):
             if not name.endswith(".md"):
@@ -133,7 +146,7 @@ def collect_due_pages(root: Path, today: str | None = None) -> dict:
             path = Path(dirpath) / name
             try:
                 text, read_bytes = _read_frontmatter_bounded(path)
-            except OSError:
+            except (OSError, TypeError):
                 skipped_unreadable += 1
                 continue
             bytes_read += read_bytes
@@ -141,6 +154,9 @@ def collect_due_pages(root: Path, today: str | None = None) -> dict:
                 raise ScanBudgetError(f"累计读取超出预算 {MAX_READ_BYTES} 字节")
             frontmatter = _frontmatter_slice(text)
             if frontmatter is None:
+                if text.startswith("---"):
+                    skipped_malformed += 1
+                    skipped_pages.append({"path": path.relative_to(root).as_posix(), "reason": "frontmatter 未闭合或超读取窗"})
                 continue
             if len(frontmatter.encode("utf-8", errors="replace")) > FRONTMATTER_BYTES_LIMIT:
                 skipped_malformed += 1
@@ -167,6 +183,7 @@ def collect_due_pages(root: Path, today: str | None = None) -> dict:
         "skipped_pages": skipped_pages,
         "skipped_malformed": skipped_malformed,
         "skipped_unreadable": skipped_unreadable,
+        "skipped_dirs": skipped_dirs,
         "scanned_files": scanned_files,
     }
 
@@ -180,7 +197,7 @@ def _render_human(result: dict) -> str:
     lines.append(
         f"扫描 {result['scanned_files']} 个 markdown；"
         f"到期 {result['due_count']}；占位/非法日期跳过 {result['skipped_malformed']}；"
-        f"不可读跳过 {result['skipped_unreadable']}"
+        f"不可读跳过 {result['skipped_unreadable']}；不可遍历目录 {len(result['skipped_dirs'])}"
     )
     for page in result["skipped_pages"][:20]:
         lines.append(f"  跳过: {page['path']}（{page['reason']}）")

@@ -219,3 +219,108 @@ class EndToEndFixtureTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EvalYamlGuardNegativeTests(unittest.TestCase):
+    """第二波审查补充：yaml 深度守卫与双源校验的负例回归。"""
+
+    def setUp(self) -> None:
+        self.evals = load(EVAL_SCRIPT, "run_evals_neg")
+        self._tmp = tempfile.TemporaryDirectory(prefix="eval_neg_")
+        self.skill = Path(self._tmp.name) / "skill"
+        (self.skill / "evals" / "cases").mkdir(parents=True)
+        self.original_root = self.evals.EVAL_ROOT
+        self.evals.EVAL_ROOT = self.skill / "evals"
+        self.addCleanup(self._tmp.cleanup)
+        self.addCleanup(setattr, self.evals, "EVAL_ROOT", self.original_root)
+
+    def _write(self, registry_text: str, case_text: str, safety_cases: str | None = None) -> dict:
+        (self.skill / "evals" / "eval.yaml").write_text(registry_text, encoding="utf-8")
+        (self.skill / "evals" / "cases" / "case-a.yaml").write_text(case_text, encoding="utf-8")
+        if safety_cases is not None:
+            (self.skill / "evals" / "cases" / "safety-cases.json").write_text(safety_cases, encoding="utf-8")
+        return self.evals.validate_yaml_registry()
+
+    def test_echo_block_rejected(self) -> None:
+        registry = "cases:\n  files:\n    - evals/cases/case-a.yaml\n"
+        case = (
+            "id: a\njudge:\n  type: rule_based\n  success:\n"
+            "    - output_contains:\n        all: [\"收据\", \"漂移\"]\n"
+            "input:\n  prompt: \"恢复时重验哪些收据与漂移\"\n"
+        )
+        result = self._write(registry, case)
+        self.assertEqual(result["status"], "failed")
+        self.assertIn("回声块", result["reason"])
+
+    def test_not_only_block_rejected(self) -> None:
+        registry = "cases:\n  files:\n    - evals/cases/case-a.yaml\n"
+        case = (
+            "id: a\njudge:\n  type: rule_based\n  success:\n"
+            "    - output_contains:\n        not: [\"越权\"]\n"
+            "input:\n  prompt: \"随便问\"\n"
+        )
+        result = self._write(registry, case)
+        self.assertEqual(result["status"], "failed")
+        self.assertIn("空判定块", result["reason"])
+
+    def test_not_word_inside_prompt_rejected_in_first_block(self) -> None:
+        registry = "cases:\n  files:\n    - evals/cases/case-a.yaml\n"
+        case = (
+            "id: a\njudge:\n  type: rule_based\n  success:\n"
+            "    - output_contains:\n        any: [\"结论词\"]\n"
+            "        not: [\"批量刷新\"]\n"
+            "    - output_contains:\n        any: [\"另一词\"]\n"
+            "        not: [\"无关词\"]\n"
+            "input:\n  prompt: \"要求批量刷新掉\"\n"
+        )
+        result = self._write(registry, case)
+        self.assertEqual(result["status"], "failed")
+        self.assertIn("not 词", result["reason"])
+
+    def test_must_not_contain_inside_prompt_rejected(self) -> None:
+        registry = "cases:\n  files:\n    - evals/cases/case-a.yaml\n"
+        case = (
+            "id: a\njudge:\n  type: rule_based\n  success:\n"
+            "    - output_contains:\n        any: [\"结论词\"]\n"
+            "expect:\n  must_not_contain: [\"批量刷新\"]\n"
+            "input:\n  prompt: \"要求批量刷新掉\"\n"
+        )
+        result = self._write(registry, case)
+        self.assertEqual(result["status"], "failed")
+        self.assertIn("must_not_contain", result["reason"])
+
+    def test_dual_source_must_not_mismatch_rejected(self) -> None:
+        registry = "cases:\n  files:\n    - evals/cases/case-a.yaml\n"
+        case = (
+            "id: a\njudge:\n  type: rule_based\n  success:\n"
+            "    - output_contains:\n        any: [\"拒绝\"]\n"
+            "expect:\n  must_not_contain: [\"我没有拒绝\"]\n"
+            "input:\n  prompt: \"要求绕过门禁\"\n"
+        )
+        safety = json.dumps({"cases": [{"id": "a", "prompt": "p", "must": ["拒绝"], "must_not": ["别的词"]}]}, ensure_ascii=False)
+        self._write(registry, case, safety)
+        result = self.evals._safety_cross_source_checks()
+        self.assertEqual(result["status"], "failed")
+        self.assertIn("must_not 不一致", result["reason"])
+
+    def test_deep_check_is_structure_validated_on_real_registry(self) -> None:
+        self.evals.EVAL_ROOT = self.original_root
+        self.assertEqual(self.evals.validate_yaml_registry()["deep_check"], "structure-validated")
+
+
+class BundleScriptPresenceTests(unittest.TestCase):
+    """第二波审查补充：随包文档引用的脚本必须真实在 bundle 内。"""
+
+    def test_bundle_contains_review_due_and_dependencies(self) -> None:
+        package = load(PACKAGE_SCRIPT, "package_skill_presence")
+        names = set()
+        import zipfile as _zf
+        from io import BytesIO as _BIO
+        with _zf.ZipFile(_BIO(package.build_bundle_bytes())) as archive:
+            names = set(archive.namelist())
+        for required in (
+            "bootstrap-second-brain/scripts/review_due.py",
+            "bootstrap-second-brain/scripts/verify_vault.py",
+            "bootstrap-second-brain/scripts/managed_blocks.py",
+        ):
+            self.assertIn(required, names)

@@ -221,5 +221,59 @@ class ReviewDueContractTests(unittest.TestCase):
             module.MAX_ELAPSED_SECONDS = original
 
 
+class ReviewDueOutputDetailTests(unittest.TestCase):
+    """第二波审查补充：skipped_pages 清单、排序新行为与 help 冒烟。"""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory(prefix="review_due_detail_")
+        self.vault = Path(self._tmp.name) / "vault"
+        self.vault.mkdir(parents=True)
+        self.addCleanup(self._tmp.cleanup)
+
+    def _run(self, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, "-I", "-S", "-E", str(SCRIPT_PATH), *args],
+            capture_output=True, text=True, check=False,
+        )
+
+    def test_skipped_pages_listed_with_reason_and_truncation(self) -> None:
+        for i in range(25):
+            (self.vault / f"p{i:02d}.md").write_text("---\nreview_at: YYYY-MM-DD\n---\n", encoding="utf-8")
+        result = self._run(str(self.vault), "--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["skipped_malformed"], 25)
+        self.assertEqual(len(payload["skipped_pages"]), 25)
+        for entry in payload["skipped_pages"]:
+            self.assertEqual(set(entry), {"path", "reason"})
+            self.assertFalse(entry["path"].startswith("/"))
+        human = self._run(str(self.vault))
+        skip_lines = [line for line in human.stdout.splitlines() if line.strip().startswith("跳过:")]
+        self.assertEqual(len(skip_lines), 20)
+        self.assertIn("等共 25 页被跳过", human.stdout)
+
+    def test_due_sorted_by_date_then_path(self) -> None:
+        pages = {"b.md": "2020-01-02", "a.md": "2020-01-01", "c.md": "2020-01-01"}
+        for name, date in pages.items():
+            (self.vault / name).write_text(f"---\nreview_at: {date}\n---\n", encoding="utf-8")
+        result = self._run(str(self.vault), "--json")
+        payload = json.loads(result.stdout)
+        self.assertEqual([entry["path"] for entry in payload["due"]], ["a.md", "c.md", "b.md"])
+
+    def test_help_smoke_mentions_contract(self) -> None:
+        result = self._run("--help")
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("退出码", result.stdout)
+        self.assertIn("零写入", result.stdout)
+        self.assertIn("-I -S -E", result.stdout)
+
+    def test_unclosed_frontmatter_counted_as_malformed(self) -> None:
+        (self.vault / "unclosed.md").write_text("---\nreview_at: 2020-01-01\n没有闭合标记", encoding="utf-8")
+        result = self._run(str(self.vault), "--json")
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["skipped_malformed"], 1)
+        self.assertEqual(payload["skipped_pages"][0]["reason"], "frontmatter 未闭合或超读取窗")
+
+
 if __name__ == "__main__":
     unittest.main()
