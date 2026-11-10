@@ -175,5 +175,5 @@ python3 skills/bootstrap-second-brain/scripts/package_skill.py --write
 
 ## 反馈
 
-- 问题与建议：[GitHub Issues](https://github.com/sunrain520/TwinMind/issues)，附上 `verify` 报告与复现步骤更易被处理；
+- 问题与建议：[GitHub Issues](https://github.com/leo-kuang-ai/TwinMind/issues)，附上 `verify` 报告与复现步骤更易被处理；
 - 交流：上方微信群。
