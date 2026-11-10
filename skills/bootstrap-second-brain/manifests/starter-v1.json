@@ -1,10 +1,10 @@
 {
   "schema_version": "starter-manifest-v1",
-  "starter_version": "0.2.0",
+  "starter_version": "0.3.0",
   "source": {
     "root": "我的第二大脑",
-    "commit": "12898d930211fbdf358ccc60de78cce6b893a68c",
-    "tree_digest": "993a10aa9c28dba2d785ea9ada0248b77d8af12996c4d818502116477ee6cf3a"
+    "commit": "c0f4ef38e1b4bd6a984d56b5340462c3eb947e28",
+    "tree_digest": "f1ef21d66c5be17843ffe0710dfba0966d3352e2f6d14848439b25c59329e55c"
   },
   "projection": {
     "root": "assets/starter-kit",
@@ -54,6 +54,12 @@
       "sha256": "f0605924fb5bcabf1bd44a8107fef425a78bf556bb1940cea4c24ffae4cf70f3"
     },
     {
+      "path": "10_当前工作台/00_数字分身画像.md",
+      "ownership": "static",
+      "layer": "portable-core",
+      "sha256": "b6c97a107fd1514ab54c2c67e36ad443ad599e5212251ee2d11c8d1009621016"
+    },
+    {
       "path": "10_当前工作台/00_第二大脑启动契约.md",
       "ownership": "managed-block",
       "layer": "portable-core",
@@ -99,7 +105,13 @@
       "path": "30_知识主题/工具选择与升级门禁.md",
       "ownership": "static",
       "layer": "tooling-adapter",
-      "sha256": "ead89b6831c6a30fdd5cd675829e4c3ef9403b4b67c3ed21c02f701655690dd5"
+      "sha256": "8a9dac4aceb2c7692a1fb139ffcb1aed3b3d50ade0c5816d3982b3e1b6f1d2c0"
+    },
+    {
+      "path": "30_知识主题/数字分身成熟度路线.md",
+      "ownership": "static",
+      "layer": "portable-core",
+      "sha256": "89b27f8925b5e7cb168e8e0cd1908bd4c59228e6f36c8cb9a6c9665de706cd3a"
     },
     {
       "path": "30_知识主题/来源登记与摄取分档.md",
@@ -288,6 +300,12 @@
       "sha256": "b3eb40f309f39389214ce6c8d9f012a10945a88cb94c8a8f12819c72557f3487"
     },
     {
+      "path": "99_维护记录/记忆系统/README.md",
+      "ownership": "static",
+      "layer": "portable-core",
+      "sha256": "c660d4a2450e71f471eb9acb5c4b2cd89cfd5c9efea1e5c9982a7644c00b3071"
+    },
+    {
       "path": "AI协作协议.md",
       "ownership": "managed-block",
       "layer": "portable-core",
@@ -315,7 +333,7 @@
       "path": "知识库索引.md",
       "ownership": "managed-block",
       "layer": "portable-core",
-      "sha256": "3060df6e501997b258aca943ca1a388f9f83e2eec42fc1f119b475475070f8f8"
+      "sha256": "1a385f28293ad261d0963317565bd92233f8bc9ec76f066780c0fc7091a33833"
     },
     {
       "path": "维护日志.md",

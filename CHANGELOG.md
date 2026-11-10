@@ -8,6 +8,7 @@
   - `变更摘要` 使用中文，简明说明本次改动
   - 用户可感知的变更在末尾追加 `(user-visible)`
 
+- v1.20.0 2026-11-11 00:10:00 leokuang: 数字分身主线贯通（Starter 内容版本升至 0.3.0）——新增数字分身画像活页（身份事实唯一事实源/决策风格/盲点与 AI 提醒义务/分身边界声明）、记忆系统（会话收尾契约+记忆条目四级+提升五检，程序记忆须 Owner 确认）、数字分身成熟度路线（L1 结构基座→L2 治理库→L3 可检索库→L4 数字分身四阶段，进入信号/新增件/退出判据/分身三问验收）；知识库索引挂接三入口，README FAQ/你将得到什么同步；投影经 sync_starter_assets --write 重建 (user-visible)
 - v1.19.0 2026-11-10 23:10:00 leokuang: 新增可选语义检索升级配件 ai-search-kit（本地 khoj×Ollama×pgvector compose 编排、嵌入批量 1000→32 幂等补丁、golden set 评测脚本与示例、健康巡检骨架），升级门禁页与 README FAQ 接线；默认不启用，凭真实漏召回登记取用 (user-visible)
 - v1.14.0 2026-08-06 23:06:24 leokuang: 使用 spec-first 初始化项目
 - v1.15.0 2026-08-07 02:54:57 leokuang: 新增 TwinMind 第二大脑初始化 Skill、Git 硬门禁、只读审计、恢复与私有分发验证 (user-visible)
