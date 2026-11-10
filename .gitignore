@@ -31,3 +31,11 @@ skills/bootstrap-second-brain/**/*.sig
 .agents/
 .codex/
 .kiro/
+
+# ai-search-kit 运行时产物（密钥/评测结果/告警日志/缓存，可重建）
+ai-search-kit/.env
+ai-search-kit/eval/golden_set.json
+ai-search-kit/eval/eval-*.md
+ai-search-kit/.health_alerts.log
+ai-search-kit/**/__pycache__/
+

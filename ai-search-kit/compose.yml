@@ -1,0 +1,50 @@
+# ai-search-kit：khoj + pgvector 本地语义检索编排
+# 用法见同目录 README.md；密钥放 .env（不进 Git）。
+# 版本锚点：khoj 2.0.0-beta.28 —— 换 latest 前先验证 patches/apply_patch.sh 模式匹配。
+services:
+  database:
+    image: docker.io/pgvector/pgvector:pg15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: khoj
+      POSTGRES_PASSWORD: ${KHOJ_DB_PASSWORD}
+      POSTGRES_DB: khoj
+    volumes:
+      - khoj_db:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U khoj -d khoj"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  server:
+    image: ghcr.io/khoj-ai/khoj:2.0.0-beta.28
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:42110:42110"   # 只绑本机回环；远程访问需自配认证
+    working_dir: /app
+    volumes:
+      - khoj_config:/root/.khoj/
+      - khoj_models:/root/.cache/torch/sentence_transformers
+      - khoj_models:/root/.cache/huggingface
+      - ./patches:/patches:ro     # 嵌入批量补丁，entrypoint 启动时幂等应用
+    environment:
+      POSTGRES_DB: khoj
+      POSTGRES_USER: khoj
+      POSTGRES_PASSWORD: ${KHOJ_DB_PASSWORD}
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      KHOJ_DJANGO_SECRET_KEY: ${KHOJ_DJANGO_SECRET_KEY}
+      KHOJ_DEBUG: "False"
+      KHOJ_TELEMETRY_DISABLE: "True"
+    entrypoint: ["/bin/sh", "-c", "/bin/sh /patches/apply_patch.sh && exec python3 src/khoj/main.py \"$@\"", "--"]
+    # --anonymous-mode：本地单用户免登录（端口仅本机回环）；多用户/远程场景去掉并配认证
+    command: --host="0.0.0.0" --port=42110 -vv --anonymous-mode --non-interactive
+
+volumes:
+  khoj_config:
+  khoj_db:
+  khoj_models:

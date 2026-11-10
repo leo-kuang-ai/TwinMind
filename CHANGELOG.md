@@ -8,6 +8,7 @@
   - `变更摘要` 使用中文，简明说明本次改动
   - 用户可感知的变更在末尾追加 `(user-visible)`
 
+- v1.19.0 2026-11-10 23:10:00 leokuang: 新增可选语义检索升级配件 ai-search-kit（本地 khoj×Ollama×pgvector compose 编排、嵌入批量 1000→32 幂等补丁、golden set 评测脚本与示例、健康巡检骨架），升级门禁页与 README FAQ 接线；默认不启用，凭真实漏召回登记取用 (user-visible)
 - v1.14.0 2026-08-06 23:06:24 leokuang: 使用 spec-first 初始化项目
 - v1.15.0 2026-08-07 02:54:57 leokuang: 新增 TwinMind 第二大脑初始化 Skill、Git 硬门禁、只读审计、恢复与私有分发验证 (user-visible)
 - v1.16.0 2026-08-11 11:36:30 leokuang: 同步七阶学习闭环、决策学习与三环进化方法，并新增高价值知识回放模板 (user-visible)
